@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
+import {School, Users, CheckSquare, Clock, GraduationCap } from 'lucide-react';
 
 const mainNavItems: NavItem[] = [
     {
@@ -22,6 +23,31 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    {
+        title: 'Centros Educativos',
+        href: '/centros', 
+        icon: School,
+    },
+    {
+        title: 'Gestión de Becarios',
+        href: '/becarios',
+        icon: Users,
+    },
+    {
+        title: 'Prácticas y Tareas',
+        href: '/tareas',
+        icon: CheckSquare,
+    },
+    {
+        title: 'Control Horario',
+        href: '/control-horario',
+        icon: Clock,
+    },
+    {
+        title: 'Evaluación y Notas',
+        href: '/evaluacion',
+        icon: GraduationCap,
+    }
 ];
 
 const footerNavItems: NavItem[] = [
