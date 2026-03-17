@@ -13,7 +13,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { becarios, centros, controlHorario, dashboard, evaluacion, tareas } from '@/routes';
+import { becarios, controlHorario, dashboard, evaluacion, tareas } from '@/routes';
 import type { NavItem } from '@/types';
 import {School, Users, CheckSquare, Clock, GraduationCap } from 'lucide-react';
 
@@ -25,7 +25,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Centros Educativos',
-        href: centros(), 
+        href: '/centros', 
         icon: School,
     },
     {

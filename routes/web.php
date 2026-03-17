@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
+use App\Http\Controllers\CenterController;
 
 Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
@@ -9,7 +10,10 @@ Route::inertia('/', 'welcome', [
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
-    Route::inertia('centros', 'centros/index')->name('centros');
+    Route::resource('centros', CenterController::class)->parameters([
+    'centros' => 'center'
+    ]);
+
     Route::inertia('becarios', 'becarios/index')->name('becarios');
     Route::inertia('tareas', 'tareas/index')->name('tareas');
     Route::inertia('control-horario', 'control-horario/index')->name('control-horario');
