@@ -29,7 +29,12 @@ class CenterRequest extends FormRequest
         $ignoreId = $centerId ? ',' . $centerId : '';
 
         return [
-            'nif'           => 'required|string|unique:centers,nif' . $ignoreId,
+            'nif' => [
+                'required',
+                'string',
+                'regex:/^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J]$/i',
+                'unique:centers,nif' . $ignoreId
+],
             'name'          => 'required|string|max:255',
             'address'       => 'required|string',
             'phone'         => 'required|string',

@@ -45,7 +45,6 @@ class CenterController extends Controller
      */
     public function create()
     {
-
         
         return Inertia::render('centros/form');
     }
@@ -70,7 +69,7 @@ class CenterController extends Controller
             'center' => $center,
 
             'interns' => $center->interns()
-                ->select('id', 'name', 'last_name', 'email', 'status', 'start_date')
+                ->select('id', 'name', 'last_name', 'email', 'status', 'start_date', 'end_date')
                 ->latest()
                 ->get(),
 
@@ -78,6 +77,8 @@ class CenterController extends Controller
                 'total' => $center->interns()->count(),
                 'activos' => $center->interns()->where('status', 'active')->count(),
                 'finalizados' => $center->interns()->where('status', 'finished')->count(),
+                'abandonados' => $center->interns()->where('status', 'abandoned')->count(),
+                
             ]
         ]);
     }

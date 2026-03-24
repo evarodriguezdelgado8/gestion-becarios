@@ -128,7 +128,7 @@ export default function Index({
                                                 </div>
                                                 <div className="text-[13px] text-gray-600 mt-1 font-mono">CIF: {centro.nif}</div>
                                                 {centro.web && (
-                                                    <a href={centro.web} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1.5 text-sm font-medium mt-2">
+                                                    <a href={centro.web} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-600 hover:underline flex items-center gap-1.5 text-sm font-medium mt-2 transition-colors">
                                                         <Globe className="w-3.5 h-3.5 flex-shrink-0" /> 
                                                         <span className="break-all">{centro.web.replace('https://', '').replace('http://', '')}</span>
                                                     </a>
@@ -137,10 +137,10 @@ export default function Index({
 
                                             <td className="px-4 py-4 align-middle">
                                                 <div className="flex items-start gap-2 text-gray-900 font-bold text-base leading-tight">
-                                                    <User className="w-4 h-4 text-blue-500 mt-1 flex-shrink-0" />
+                                                    <User className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                                                     <span className="break-words">{centro.contact_name}</span>
                                                 </div>
-                                                <div className="text-[11px] uppercase font-bold text-blue-700/70 ml-6 mt-1 mb-2">
+                                                <div className="text-[11px] uppercase font-bold text-gray-700/70 ml-6 mt-1 mb-2">
                                                     {centro.contact_role || 'Coordinador'}
                                                 </div>
                                                 <div className="flex flex-col gap-2 text-sm text-gray-600 ml-6">
@@ -226,7 +226,7 @@ export default function Index({
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-12 text-center text-gray-400 italic">No hay centros que coincidan.</td>
+                                        <td colSpan={4} className="px-6 py-12 text-center text-gray-400 italic">No se encontraron centros que coincidan.</td>
                                     </tr>
                                 )}
                             </tbody>

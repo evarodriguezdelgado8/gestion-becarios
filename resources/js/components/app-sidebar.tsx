@@ -13,7 +13,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { becarios, controlHorario, dashboard, evaluacion, tareas } from '@/routes';
+import {controlHorario, dashboard, evaluacion, tareas } from '@/routes';
 import type { NavItem } from '@/types';
 import {School, Users, CheckSquare, Clock, GraduationCap } from 'lucide-react';
 
@@ -30,7 +30,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Gestión de Becarios',
-        href: becarios(),
+        href: '/becarios',
         icon: Users,
     },
     {

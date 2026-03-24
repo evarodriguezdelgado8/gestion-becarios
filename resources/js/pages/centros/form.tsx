@@ -1,7 +1,7 @@
 import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Center, BreadcrumbItem } from '@/types';
-import { Globe, MapPin, User, Mail, Phone } from 'lucide-react';
+import { Globe, MapPin, User, } from 'lucide-react';
 
 export default function Form({ center }: { center?: Center }) {
     const isEditing = !!center;
@@ -58,7 +58,7 @@ return (
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
                                         className={`w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-                                        placeholder="Ej: IES Tecnológico"
+                                        placeholder="Ej: IES San Roque"
                                     />
                                     {errors.name && <p className="text-red-500 text-xs mt-1 font-medium">{errors.name}</p>}
                                 </div>
@@ -69,6 +69,7 @@ return (
                                         type="text"
                                         value={data.nif}
                                         onChange={(e) => setData('nif', e.target.value)}
+                                        placeholder="Ej: Q1234567A"
                                         className={`w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.nif ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                     />
                                     {errors.nif && <p className="text-red-500 text-xs mt-1 font-medium">{errors.nif}</p>}
@@ -78,7 +79,7 @@ return (
                                     <label className="block text-sm font-semibold text-gray-700 mb-1">Web (Opcional)</label>
                                     <input
                                         type="url"
-                                        placeholder="https://..."
+                                        placeholder="https://www.centro-ejemplo.es"
                                         value={data.web}
                                         onChange={(e) => setData('web', e.target.value)}
                                         className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -94,6 +95,7 @@ return (
                                             type="text"
                                             value={data.address}
                                             onChange={(e) => setData('address', e.target.value)}
+                                            placeholder="Calle, Número, Ciudad y CP"
                                             className={`w-full border rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.address ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                         />
                                     </div>
@@ -106,6 +108,7 @@ return (
                                         type="text"
                                         value={data.phone}
                                         onChange={(e) => setData('phone', e.target.value)}
+                                        placeholder="Ej: 954 123 456"
                                         className={`w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                     />
                                     {errors.phone && <p className="text-red-500 text-xs mt-1 font-medium">{errors.phone}</p>}
@@ -117,6 +120,7 @@ return (
                                         type="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
+                                        placeholder="secretaria@centro.es"
                                         className={`w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                     />
                                     {errors.email && <p className="text-red-500 text-xs mt-1 font-medium">{errors.email}</p>}
@@ -139,6 +143,7 @@ return (
                                         type="text"
                                         value={data.contact_name}
                                         onChange={(e) => setData('contact_name', e.target.value)}
+                                        placeholder="Nombre del tutor o responsable"
                                         className={`w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.contact_name ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                     />
                                     {errors.contact_name && <p className="text-red-500 text-xs mt-1 font-medium">{errors.contact_name}</p>}
@@ -149,6 +154,7 @@ return (
                                         type="text"
                                         value={data.contact_role}
                                         onChange={(e) => setData('contact_role', e.target.value)}
+                                        placeholder="Ej: Jefe de Estudios / Tutor FCT"
                                         className={`w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.contact_role ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                     />
                                     {errors.contact_role && <p className="text-red-500 text-xs mt-1 font-medium">{errors.contact_role}</p>}
@@ -159,6 +165,7 @@ return (
                                         type="text"
                                         value={data.contact_phone}
                                         onChange={(e) => setData('contact_phone', e.target.value)}
+                                        placeholder="Ej: 600 000 000"
                                         className={`w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.contact_phone ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                     />
                                     {errors.contact_phone && <p className="text-red-500 text-xs mt-1 font-medium">{errors.contact_phone}</p>}
@@ -169,6 +176,7 @@ return (
                                         type="email"
                                         value={data.contact_email}
                                         onChange={(e) => setData('contact_email', e.target.value)}
+                                        placeholder="contacto@ejemplo.com"
                                         className={`w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.contact_email ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                     />
                                     {errors.contact_email && <p className="text-red-500 text-xs mt-1 font-medium">{errors.contact_email}</p>}
