@@ -8,6 +8,8 @@ use App\Models\Center;
 use Illuminate\Http\Request;
 use App\Http\Requests\InternRequest;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 use App\Exports\InternsExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -70,8 +72,18 @@ class InternController extends Controller
     {
         $validated = $request->validated();
 
+        // Ejecutamos la transacción
         DB::transaction(function () use ($validated, $request) {
-            $intern = Intern::create($validated);
+            $user = User::create([
+                'name' => $validated['name'] . ' ' . ($validated['last_name'] ?? ''),
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['dni']),
+            ]);    
+            $user->assignRole('intern');
+            
+            $intern = \App\Models\Intern::create(array_merge($validated, [
+                'user_id' => $user->id
+            ]));
 
             if ($request->hasFile('document_dni')) {
                 $intern->addMediaFromRequest('document_dni')->toMediaCollection('dni_scan');
@@ -121,8 +133,9 @@ class InternController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(InternRequest $request, Intern $intern)
+    public function update(InternRequest $request, $id)
     {
+        $intern = Intern::findOrFail($id);
         $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $request, $intern) {
@@ -146,8 +159,14 @@ class InternController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Intern $intern)
+    public function destroy($id)
     {
+        $intern = Intern::findOrFail($id);
+
+        if($intern->user_id) {
+            User::where('id', $intern->user_id)->delete();
+        }
+        
         $intern->delete();
 
         return redirect()->route('becarios.index')

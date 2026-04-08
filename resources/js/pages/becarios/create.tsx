@@ -29,7 +29,6 @@ export default function Create({ centers }: Props) {
 
     const handleSubmit = (e: React.SyntheticEvent) => {
         e.preventDefault();
-        console.log("¡El botón funciona! Enviando datos:", data);
         post('/becarios');
     };
 

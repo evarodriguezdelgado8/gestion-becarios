@@ -40,7 +40,7 @@ class InternRequest extends FormRequest
             'address'           => 'required|string',
 
             'center_id'         => 'required|exists:centers,id',
-            'academic_cycle'    => 'required|string|max:255',
+            'academic_cycle'    => 'required|in:ASIR,DAM,DAW',
             'academic_tutor'    => 'required|string|max:255',
 
             'start_date'        => 'required|date',

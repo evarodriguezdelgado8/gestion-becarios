@@ -2,19 +2,64 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class RoleSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        Role::firstOrCreate(['name' => 'admin']);
-        Role::firstOrCreate(['name' => 'tutor']);
-        Role::firstOrCreate(['name' => 'intern']);
+        $permissions = [
+            'manage centers', 
+            'manage interns',
+
+            'view centers',
+            'view interns',
+            
+            'create tasks',
+            'assign tasks',
+            'edit any task',
+            'delete tasks',
+            'attach specifications',
+            'evaluate progress',
+            
+            'view own tasks',
+            'upload deliverables',
+            'update task status',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        $admin = Role::firstOrCreate(['name' => 'admin']);
+        $tutor = Role::firstOrCreate(['name' => 'tutor']);
+        $intern = Role::firstOrCreate(['name' => 'intern']);
+
+        $admin->syncPermissions([
+            'manage centers',
+            'manage interns',
+            'view own tasks',
+        ]);
+
+        $tutor->syncPermissions([
+            'view centers',
+            'view interns',
+            'create tasks',
+            'assign tasks',
+            'edit any task',
+            'delete tasks',
+            'attach specifications',
+            'evaluate progress',
+            'update task status',
+            'view own tasks',
+        ]);
+
+        $intern->syncPermissions([
+            'view own tasks',
+            'upload deliverables',
+            'update task status',
+        ]);
     }
 }

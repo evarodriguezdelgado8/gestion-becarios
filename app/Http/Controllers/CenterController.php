@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Requests\CenterRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CenterController extends Controller
 {
@@ -54,11 +55,12 @@ class CenterController extends Controller
      */
     public function store(CenterRequest $request)
     {
-        
-        Center::create($request->validated());
+        DB::transaction(function () use ($request) {
+            Center::create($request->validated());
+        });
+
         return Redirect::route('centros.index')->with('success', 'Centro creado.');
     }
-
     /**
      * Display the specified resource.
      */

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, router, Link, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout'; 
 import { Intern, Pagination } from '@/types';
 import { 
@@ -26,7 +26,11 @@ interface Props {
 }
 
 export default function Index({ interns, filters, centers, flash }: Props) {   
-
+    const { auth } = usePage().props as any;
+    const isAdmin = auth.user?.roles?.some((r: any) => {
+        const roleName = typeof r === 'object' ? r.name : r;
+        return roleName?.toLowerCase().includes('admin');
+    });
     const [copiedEmail, setCopiedEmail] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [internToDelete, setInternToDelete] = useState<Intern | null>(null);
@@ -47,28 +51,39 @@ export default function Index({ interns, filters, centers, flash }: Props) {
     const copyToClipboard = (email: string, id: number) => {
         navigator.clipboard.writeText(email);
         setCopiedEmail(id);
-        toast.success('Email copiado al portapapeles');
+        toast.info('Copiado al portapapeles', {
+            icon: <Copy className="w-4 h-4 text-blue-600" />,
+        });
         setTimeout(() => setCopiedEmail(null), 2000);
-    };    
+    };
+     
 
     const performSearch = useCallback(
-        debounce((currentParams) => {
+        debounce((newParams) => {
             router.get(
                 '/becarios', 
-                currentParams, 
+                newParams, 
                 { preserveState: true, replace: true, preserveScroll: true }
             );
         }, 300),
         []
     );
 
-    useEffect(() => {
-        performSearch(params);
-    }, [params, performSearch]);
-
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setParams(prev => ({ ...prev, [name]: value }));
+        
+        const newParams = { ...params, [name]: value };
+        setParams(newParams);
+
+        if (name === 'search') {
+            performSearch(newParams);
+        } else {
+            router.get('/becarios', newParams, { 
+                preserveState: true, 
+                replace: true, 
+                preserveScroll: true 
+            });
+        }
     };
 
     const resetFilters = () => {
@@ -99,6 +114,18 @@ export default function Index({ interns, filters, centers, flash }: Props) {
         return `/becarios/export?${queryParams.toString()}`;
     };
 
+    const statusMap: Record<string, { label: string; class: string }> = {
+        'active': { label: 'Activo', class: 'bg-green-100 text-green-700' },
+        'finished': { label: 'Finalizado', class: 'bg-blue-100 text-blue-700' },
+        'abandoned': { label: 'Abandonado', class: 'bg-red-100 text-red-700' },
+    };
+
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return 'Indefinido';
+        const [year, month, day] = dateString.split('-');
+        return `${day}/${month}/${year}`;
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Gestión de Becarios" />
@@ -110,19 +137,18 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                     <div className="flex w-full md:w-auto gap-3">
                         <a 
                             href={getExportUrl()}
-                            className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 text-sm font-medium shadow-sm transition flex items-center gap-2"
+                            className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 text-sm font-medium shadow-sm transition flex items-center gap-2 cursor-pointer"
                         >
                             <FileDown className="w-4 h-4" />
                             <span className="hidden sm:inline">Exportar</span>
                         </a>
 
-                        <Link 
-                            href="/becarios/create"
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium shadow-sm transition flex items-center gap-2"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span className="hidden sm:inline">Nuevo Becario</span>
-                        </Link>
+                        {isAdmin && (
+                            <Link href="/becarios/create" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition flex items-center gap-2 cursor-pointer">
+                                <Plus className="w-4 h-4" />
+                                <span className="hidden sm:inline">Nuevo Becario</span>
+                            </Link>
+                        )}
                     </div>
                 </div>
 
@@ -148,7 +174,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                                 name="status"
                                 value={params.status}
                                 onChange={handleFilterChange}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer"
                             >
                                 <option value="">Todos los estados</option>
                                 <option value="active">Activo</option>
@@ -163,9 +189,9 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                                 name="center_id"
                                 value={params.center_id}
                                 onChange={handleFilterChange}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer"
                             >
-                                <option value="">Todos los centros</option>
+                                <option value="" className="cursor-pointer">Todos los centros</option>
                                 {centers?.map(center => (
                                     <option key={center.id} value={center.id}>{center.name}</option>
                                 ))}
@@ -175,7 +201,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                         <div className="flex items-end">
                             <button 
                                 onClick={resetFilters}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-red-600 transition-colors border border-dashed border-gray-300 rounded-lg hover:border-red-200"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-red-600 transition-colors border border-dashed border-gray-300 rounded-lg hover:border-red-200 cursor-pointer"
                             >
                                 <X className="w-4 h-4" /> Limpiar
                             </button>
@@ -190,7 +216,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                                 name="from_date"
                                 value={params.from_date}
                                 onChange={handleFilterChange}
-                                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                className="cursor-pointer border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                             />
                         </div>
                         <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -200,7 +226,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                                 name="to_date"
                                 value={params.to_date}
                                 onChange={handleFilterChange}
-                                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                className="cursor-pointer border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                             />
                         </div>
                     </div>
@@ -228,136 +254,137 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                                         </td>
                                     </tr>
                                 )}
-                                {interns.data.map((becario) => (
-                                    <tr key={becario.id} className="hover:bg-blue-50/10 transition-colors">
-                                        <td className="px-4 py-4 align-middle">
-                                            <div className="flex items-start gap-3">
-                                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0 mt-1">
-                                                    <User className="w-5 h-5" />
+                                {interns.data.map((becario) => {
+                                    const statusInfo = statusMap[becario.status] || { 
+                                        label: becario.status, 
+                                        class: 'bg-gray-100 text-gray-600' 
+                                    };
+
+                                    return (
+                                        <tr key={becario.id} className="hover:bg-blue-50/10 transition-colors">
+                                            <td className="px-4 py-4 align-middle">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0 mt-1">
+                                                        <User className="w-5 h-5" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <div className="font-bold text-gray-900 text-base leading-tight">
+                                                            <Link 
+                                                                href={`/becarios/${becario.id}`} 
+                                                                className="hover:text-blue-600 transition-colors cursor-pointer"
+                                                            >
+                                                                {becario.name} {becario.last_name}
+                                                            </Link>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="text-[12px] text-gray-500 font-mono flex items-center gap-1">
+                                                                <span className="font-semibold text-gray-400">DNI:</span> {becario.dni}
+                                                            </div>
+                                                            <div className="text-[11px] text-gray-400 flex flex-col gap-1">
+                                                                <div className="flex items-center gap-1.5 text-gray-500 font-medium">
+                                                                    <Phone className="w-3 h-3 flex-shrink-0 text-gray-400" /> 
+                                                                    {becario.phone || 'Sin teléfono'}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-start gap-1 max-w-[200px] mt-1"> 
+                                                                <Mail className="w-3 h-3 text-gray-400 mt-1 flex-shrink-0" />
+                                                                <a 
+                                                                    href={`mailto:${becario.email}`} 
+                                                                    className="text-[12px] text-gray-500 hover:text-blue-600 hover:underline break-all transition-colors cursor-pointer"
+                                                                >
+                                                                    {becario.email}
+                                                                </a> 
+                                                                <button
+                                                                    onClick={() => copyToClipboard(becario.email, becario.id)}
+                                                                    className="ml-1 p-0.5 text-gray-400 hover:text-blue-600 transition-colors cursor-pointer flex-shrink-0"
+                                                                    title="Copiar email"
+                                                                >
+                                                                    {copiedEmail === becario.id ? (
+                                                                        <Check className="w-3 h-3 text-green-500" />
+                                                                    ) : (
+                                                                        <Copy className="w-3 h-3" />
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <div className="font-bold text-gray-900 text-base leading-tight">
-                                                        <Link 
-                                                            href={`/becarios/${becario.id}`} 
-                                                            className="hover:text-blue-600 transition-colors"
-                                                        >
-                                                            {becario.name} {becario.last_name}
+                                            </td>
+
+                                            <td className="px-4 py-4 align-middle">
+                                                <div className="flex items-start gap-1.5 text-gray-900 font-semibold">
+                                                    <Building2 className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                                                    {becario.center ? (
+                                                        <Link href={`/centros/${becario.center.id}`} className="hover:text-blue-600 transition-colors cursor-pointer">
+                                                            {becario.center.name}
                                                         </Link>
+                                                    ) : <span className="text-gray-400 italic font-normal">Sin centro</span>}
+                                                </div>
+                                                <div className="text-[11px] text-gray-500 ml-5.5 mt-1 flex items-center gap-1.5 font-medium">
+                                                    <User className="w-3.5 h-3.5 text-gray-400" />
+                                                    <span>{becario.academic_tutor || 'Sin tutor'}</span>
+                                                </div>
+                                                <div className="text-[11px] uppercase font-medium text-gray-500 ml-5.5 mt-1 flex items-center gap-1.5">
+                                                    <GraduationCap className="w-3.5 h-3.5 text-gray-400" />
+                                                    {becario.academic_cycle || 'N/A'}
+                                                </div>
+                                            </td>
+
+                                            <td className="px-4 py-4 align-middle">
+                                                <div className="mb-2 flex justify-between items-end text-[11px]">
+                                                    {/* USO DE LA VARIABLE statusInfo */}
+                                                    <span className={`px-2 py-0.5 rounded-full font-bold uppercase ${statusInfo.class}`}>
+                                                        {statusInfo.label}
+                                                    </span>
+                                                    <span className="font-mono font-bold text-blue-600">
+                                                        {Math.round((becario.completed_hours / (becario.total_hours || 400)) * 100)}%
+                                                    </span>
+                                                </div>
+                                                
+                                                <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                                    <div 
+                                                        className="bg-blue-500 h-full rounded-full transition-all duration-500"
+                                                        style={{ width: `${(becario.completed_hours / (becario.total_hours || 400)) * 100}%` }}
+                                                    ></div>
+                                                </div>
+
+                                                <div className="mt-2 flex flex-col gap-1 text-[10px] text-gray-400 font-medium">
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="flex items-center gap-1 text-gray-500 font-medium">
+                                                            <Calendar className="w-3 h-3" />
+                                                            {formatDate(becario.start_date)} - {formatDate(becario.end_date)}
+                                                        </span>
                                                     </div>
-                                                    <div className="flex flex-col gap-1">
-                                                        <div className="text-[12px] text-gray-500 font-mono flex items-center gap-1">
-                                                            <span className="font-semibold text-gray-400">DNI:</span> {becario.dni}
-                                                        </div>
-                                                        <div className="text-[11px] text-gray-400 flex flex-col gap-1">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <MapPin className="w-3 h-3 flex-shrink-0 text-gray-400" /> 
-                                                                {becario.address ? (
-                                                                    <span className="truncate max-w-[180px]">{becario.address}</span>
-                                                                ) : (
-                                                                    <span className="text-gray-400 italic">Sin dirección</span>
-                                                                )}
-                                                            </div>
-                                                            <div className="flex items-center gap-1.5 text-gray-500 font-medium">
-                                                                <Phone className="w-3 h-3 flex-shrink-0 text-gray-400" /> 
-                                                                {becario.phone || 'Sin teléfono'}
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-start gap-1 max-w-[200px] mt-1"> 
-                                                            <Mail className="w-3 h-3 text-gray-400 mt-1 flex-shrink-0" />
-                                                            <a 
-                                                                href={`mailto:${becario.email}`} 
-                                                                className="text-[12px] text-gray-500 hover:text-blue-600 hover:underline break-all transition-colors"
-                                                            >
-                                                                {becario.email}
-                                                            </a>
-                                                            <button 
-                                                                onClick={() => copyToClipboard(becario.email, becario.id)}
-                                                                className="text-gray-400 hover:text-blue-600 transition-colors ml-1"
-                                                            >
-                                                                {copiedEmail === becario.id ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-                                                            </button>
-                                                        </div>
+                                                    <div className="italic">
+                                                        {becario.completed_hours} de {becario.total_hours}h totales
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </td>
+                                            </td>
 
-                                        <td className="px-4 py-4 align-middle">
-                                            <div className="flex items-start gap-1.5 text-gray-900 font-semibold">
-                                                <Building2 className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                                                {becario.center ? (
-                                                    <Link href={`/centros/${becario.center.id}`} className="hover:text-blue-600 transition-colors">
-                                                        {becario.center.name}
+                                            <td className="px-4 py-4 align-middle text-right">
+                                                <div className="flex justify-end gap-1.5">
+                                                    <Link 
+                                                        href={`/becarios/${becario.id}`}
+                                                        className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg transition-all border border-gray-200 cursor-pointer"
+                                                        title="Ver Perfil"
+                                                    >
+                                                        <User className="w-4 h-4" /> 
                                                     </Link>
-                                                ) : <span className="text-gray-400 italic font-normal">Sin centro</span>}
-                                            </div>
-                                            <div className="text-[11px] text-gray-500 ml-5.5 mt-1 flex items-center gap-1.5 font-medium">
-                                                <User className="w-3.5 h-3.5 text-gray-400" />
-                                                <span>{becario.academic_tutor || 'Sin tutor'}</span>
-                                            </div>
-                                            <div className="text-[11px] uppercase font-medium text-gray-500 ml-5.5 mt-1 flex items-center gap-1.5">
-                                                <GraduationCap className="w-3.5 h-3.5 text-gray-400" />
-                                                {becario.academic_cycle || 'N/A'}
-                                            </div>
-                                        </td>
-
-                                        <td className="px-4 py-4 align-middle">
-                                            <div className="mb-2 flex justify-between items-end text-[11px]">
-                                                <span className={`px-2 py-0.5 rounded-full font-bold uppercase ${
-                                                    becario.status === 'active' ? 'bg-green-100 text-green-700' : 
-                                                    becario.status === 'finished' ? 'bg-blue-100 text-blue-700' : 
-                                                    'bg-red-100 text-red-700'
-                                                }`}>
-                                                    {becario.status}
-                                                </span>
-                                                <span className="font-mono font-bold text-blue-600">
-                                                    {Math.round((becario.completed_hours / (becario.total_hours || 400)) * 100)}%
-                                                </span>
-                                            </div>
-                                            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                                <div 
-                                                    className="bg-blue-500 h-full rounded-full transition-all duration-500"
-                                                    style={{ width: `${(becario.completed_hours / (becario.total_hours || 400)) * 100}%` }}
-                                                ></div>
-                                            </div>
-                                            <div className="mt-2 flex flex-col gap-1 text-[10px] text-gray-400 font-medium">
-                                                <div className="flex items-center gap-1">
-                                                    <Calendar className="w-3 h-3" />
-                                                    {becario.start_date} - {becario.end_date || 'Final indefinido'}
+                                                    {isAdmin && (
+                                                        <>
+                                                            <Link href={`/becarios/${becario.id}/edit`} className="p-2 bg-blue-600 text-white rounded-lg cursor-pointer">
+                                                                <Edit2 className="w-4 h-4" />
+                                                            </Link>
+                                                            <button onClick={() => openDeleteModal(becario)} className="p-2 bg-red-600 text-white rounded-lg cursor-pointer">
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </>
+                                                    )}
                                                 </div>
-                                                <div className="italic">
-                                                    {becario.completed_hours} de {becario.total_hours}h totales
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-4 py-4 align-middle text-right">
-                                            <div className="flex justify-end gap-1.5">
-                                                <Link 
-                                                    href={`/becarios/${becario.id}`}
-                                                    className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg transition-all border border-gray-200"
-                                                    title="Ver Perfil"
-                                                >
-                                                    <User className="w-4 h-4" /> 
-                                                </Link>
-                                                <Link 
-                                                    href={`/becarios/${becario.id}/edit`}
-                                                    className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors"
-                                                    title="Editar"
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                </Link>
-                                                <button 
-                                                    onClick={() => openDeleteModal(becario)}
-                                                    className="p-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-all"
-                                                    title="Borrar"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -371,14 +398,14 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                         <button 
                             disabled={!interns.prev_page_url}
                             onClick={() => router.get(interns.prev_page_url!, params, { preserveState: true })}
-                            className="px-4 py-2 bg-white hover:bg-gray-50 disabled:opacity-50 transition border-r font-medium text-gray-700"
+                            className="px-4 py-2 bg-white hover:bg-gray-50 disabled:opacity-50 transition border-r font-medium text-gray-700 cursor-pointer disabled:cursor-not-allowed"
                         >
                             Anterior
                         </button>
                         <button 
                             disabled={!interns.next_page_url}
                             onClick={() => router.get(interns.next_page_url!, params, { preserveState: true })}
-                            className="px-4 py-2 bg-white hover:bg-gray-50 disabled:opacity-50 transition font-medium text-gray-700"
+                            className="px-4 py-2 bg-white hover:bg-gray-50 disabled:opacity-50 transition font-medium text-gray-700 cursor-pointer disabled:cursor-not-allowed"
                         >
                             Siguiente
                         </button>
@@ -402,13 +429,13 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                         <div className="bg-gray-50 px-6 py-4 flex gap-3">
                             <button 
                                 onClick={() => setIsDeleting(false)}
-                                className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-colors"
+                                className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-colors cursor-pointer"
                             >
                                 Cancelar
                             </button>
                             <button 
                                 onClick={confirmDelete}
-                                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
+                                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200 cursor-pointer"
                             >
                                 Sí, eliminar
                             </button>
