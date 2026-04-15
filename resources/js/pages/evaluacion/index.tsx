@@ -1,5 +1,5 @@
-import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 
 export default function Evaluacion() {
     const breadcrumbs = [{ title: 'Evaluación y Notas', href: '/evaluacion' }];

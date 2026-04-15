@@ -1,10 +1,10 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { Center, BreadcrumbItem, Pagination } from '@/types';
-import { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Edit2, Trash2, Globe, Mail, Phone, MapPin, User, AlertTriangle, Eye, Copy } from 'lucide-react';
 import { debounce } from 'lodash';
+import { Search, Plus, Edit2, Trash2, Globe, Mail, Phone, MapPin, User, AlertTriangle, Eye, Copy } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import AppLayout from '@/layouts/app-layout';
+import type { Center, BreadcrumbItem, Pagination } from '@/types';
 
 export default function Index({ 
     centers, 
@@ -42,7 +42,7 @@ export default function Index({
         });
     };
 
-    const performSearch = useCallback(
+    const performSearch = useMemo(() =>
         debounce((query: string) => {
             router.get(
                 '/centros', 
@@ -61,7 +61,7 @@ export default function Index({
         if (search !== filters.search) {
             performSearch(search);
         }
-    }, [search]);
+    }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const openDeleteModal = (centro: Center) => {
         setCenterToDelete(centro);

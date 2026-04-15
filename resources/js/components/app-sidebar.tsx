@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react'; // Importamos usePage
-import { BookOpen, FolderGit2, LayoutGrid, School, Users, CheckSquare, Clock, GraduationCap } from 'lucide-react';
+import { LayoutGrid, School, Users, CheckSquare, Clock, GraduationCap } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -13,7 +13,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import {controlHorario, dashboard, evaluacion} from '@/routes';
+import {dashboard} from '@/routes';
 import type { NavItem } from '@/types';
 
 const footerNavItems: NavItem[] = [
