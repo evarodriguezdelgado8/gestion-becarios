@@ -56,15 +56,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Rutas con ID específico
     Route::patch('/tareas/{task}/status', [TaskController::class, 'updateStatus'])->name('tareas.updateStatus');
     Route::post('/tareas/{task}/comments', [TaskController::class, 'storeComment'])->name('tareas.comments.store');
+    Route::post('/tareas/{task}/deliveries', [TaskController::class, 'storeDelivery'])->name('tareas.deliveries.store');
 
-    // Ver detalle
-    Route::get('/tareas/{id}', [TaskController::class, 'show'])->name('tareas.show');
-
-    // EDITAR (Usamos POST para que Laravel acepte Multipart/Archivos con _method:put)
-    Route::match(['post', 'put'], '/tareas/{task}', [TaskController::class, 'update'])->name('tareas.update');
+    
     // ELIMINAR
     Route::delete('/tareas/{task}', [TaskController::class, 'destroy'])->name('tareas.destroy');
 
+    // EDITAR 
+    Route::match(['post', 'put'], '/tareas/{task}', [TaskController::class, 'update'])->name('tareas.update');
+
+    // Ver detalle
+    Route::get('/tareas/{task}', [TaskController::class, 'show'])->name('tareas.show');
+    
     // --- EVALUACIÓN ---
     Route::middleware(['role:admin|tutor|intern'])->group(function () {
         Route::inertia('evaluacion', 'evaluacion/index')->name('evaluacion');

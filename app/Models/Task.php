@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class Task extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, LogsActivity;
 
     protected $fillable = [
         'title', 
@@ -25,6 +27,17 @@ class Task extends Model implements HasMedia
         'completed_at'
     ];
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['title', 'description', 'status', 'priority']) 
+            ->logOnlyDirty()
+            ->logFillable()
+            ->dontLogIfAttributesChangedOnly(['updated_at', 'order_index'])
+            ->useLogName('task');
+    }
+
+    
     protected $casts = [
         'due_date' => 'date:Y-m-d',
         'completed_at' => 'datetime',
