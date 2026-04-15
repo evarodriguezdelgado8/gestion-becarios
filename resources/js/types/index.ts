@@ -94,3 +94,9 @@ export interface InternFormData {
     document_dni: File | null;
     document_convenio: File | null;
 }
+export interface NavItem {
+    title: string;
+    href: string;
+    icon: any;
+    roles?: string[];
+}

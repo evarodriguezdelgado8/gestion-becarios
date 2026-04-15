@@ -1,7 +1,7 @@
 import { Head, useForm, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { Center, BreadcrumbItem } from '@/types';
 import { Globe, MapPin, User, } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
+import type { Center, BreadcrumbItem } from '@/types';
 
 export default function Form({ center }: { center?: Center }) {
     const isEditing = !!center;
@@ -154,7 +154,7 @@ return (
                                         type="text"
                                         value={data.contact_role}
                                         onChange={(e) => setData('contact_role', e.target.value)}
-                                        placeholder="Ej: Jefe de Estudios / Tutor FCT"
+                                        placeholder="Ej: Jefe de Estudios / Tutor"
                                         className={`w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.contact_role ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                     />
                                     {errors.contact_role && <p className="text-red-500 text-xs mt-1 font-medium">{errors.contact_role}</p>}
@@ -188,14 +188,14 @@ return (
                             <button
                                 type="button"
                                 onClick={() => router.get('/centros')}
-                                className="order-2 sm:order-1 px-8 py-2.5 text-sm font-bold text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-all"
+                                className="order-2 sm:order-1 px-8 py-2.5 text-sm font-bold text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-all cursor-pointer"
                             >
                                 Cancelar
                             </button>
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="order-1 sm:order-2 px-8 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md shadow-blue-200 disabled:opacity-50 transition-all"
+                                className="order-1 sm:order-2 px-8 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
                             >
                                 {processing ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Registrar Centro'}
                             </button>

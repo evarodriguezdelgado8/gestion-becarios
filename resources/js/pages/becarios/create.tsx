@@ -1,7 +1,7 @@
-import AppLayout from '@/layouts/app-layout';
 import { Head, useForm } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import type { Center, InternFormData } from '@/types';
 import InternForm from './components/internForm';
-import { Center, InternFormData } from '@/types';
 
 interface Props {
     centers: Center[];
@@ -29,7 +29,6 @@ export default function Create({ centers }: Props) {
 
     const handleSubmit = (e: React.SyntheticEvent) => {
         e.preventDefault();
-        console.log("¡El botón funciona! Enviando datos:", data);
         post('/becarios');
     };
 

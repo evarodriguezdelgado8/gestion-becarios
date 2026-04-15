@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { Center, BreadcrumbItem, Intern } from '@/types';
 import { User, Mail, Calendar, ArrowLeft, BadgeCheck, Clock, MapPin, Phone, XCircle, CalendarCheck, Globe } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
+import type { Center, BreadcrumbItem, Intern } from '@/types';
 
 export default function Show({ center, interns, stats }: { 
     center: Center, 
@@ -12,6 +12,16 @@ export default function Show({ center, interns, stats }: {
         { title: 'Centros Educativos', href: '/centros' },
         { title: center.name, href: '#' },
     ];
+
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -156,14 +166,17 @@ export default function Show({ center, interns, stats }: {
                                         </td>
                                         <td className="px-8 py-4 text-center">
                                             <div className="inline-flex items-center gap-2 text-gray-600 font-medium">
-                                                <Calendar className="w-3.5 h-3.5 text-gray-400" /> {intern.start_date}
+                                            <Calendar className="w-3.5 h-3.5 text-gray-400" /> 
+                                            {formatDate(intern.start_date)}
                                             </div>
                                         </td>
                                         <td className="px-8 py-4 text-center">
                                             <div className="inline-flex items-center gap-2 text-gray-600 font-medium">
                                                 <CalendarCheck className="w-3.5 h-3.5 text-gray-400" /> 
                                                 {intern.end_date ? (
-                                                    <span className="text-gray-600 font-medium">{intern.end_date}</span>
+                                                    <span className="text-gray-600 font-medium">
+                                                        {formatDate(intern.end_date)}
+                                                    </span>
                                                 ) : (
                                                     intern.status === 'active' ? (
                                                         <span className="text-gray-300 font-normal italic">En curso</span>

@@ -1,7 +1,7 @@
-import React from 'react';
-import { Center } from '@/types';
 import { Link as InertiaLink } from '@inertiajs/react';
 import { FileText, User, Building2, Clock } from 'lucide-react';
+import React from 'react';
+import type { Center } from '@/types';
 
 interface Props {
     data: any;
@@ -13,6 +13,12 @@ interface Props {
     isEdit?: boolean;
 }
 
+const Label = ({ children, required = false }: { children: React.ReactNode, required?: boolean }) => (
+    <label className="text-sm font-bold text-gray-800 ml-1">
+        {children} {required && <span className="text-red-500">*</span>}
+    </label>
+);
+
 export default function InternForm({ data, setData, errors, processing, centers, submitText, isEdit }: Props) {
     const inputClasses = (error: string) => `
         w-full px-4 py-2.5 bg-white border rounded-lg shadow-sm transition-all duration-200
@@ -22,11 +28,11 @@ export default function InternForm({ data, setData, errors, processing, centers,
         text-gray-900 text-sm placeholder:text-gray-400 outline-none
     `;
 
-    const Label = ({ children, required = false }: { children: React.ReactNode, required?: boolean }) => (
-        <label className="text-sm font-bold text-gray-800 ml-1">
-            {children} {required && <span className="text-red-500">*</span>}
-        </label>
-    );
+    const interactiveClasses = (error: string) => `
+        ${inputClasses(error)} cursor-pointer
+    `;
+
+    
 
     return (
         <div className="space-y-6">
@@ -128,7 +134,7 @@ export default function InternForm({ data, setData, errors, processing, centers,
                         <select 
                             value={data.center_id} 
                             onChange={e => setData('center_id', e.target.value)}
-                            className={inputClasses(errors.center_id)}
+                            className={interactiveClasses(errors.center_id)}
                         >
                             <option value="">Seleccione un centro</option>
                             {centers.map(center => (
@@ -140,14 +146,19 @@ export default function InternForm({ data, setData, errors, processing, centers,
 
                     <div className="space-y-1.5">
                         <Label required>Ciclo Formativo</Label>
-                        <input 
-                            type="text" 
+                        <select 
                             value={data.academic_cycle} 
                             onChange={e => setData('academic_cycle', e.target.value)}
-                            placeholder="Ej: DAW, ASIR..."
-                            className={inputClasses(errors.academic_cycle)}
-                        />
-                        {errors.academic_cycle && <p className="text-red-500 text-xs mt-1 italic">{errors.academic_cycle}</p>}
+                            className={interactiveClasses(errors.academic_cycle)}
+                        >
+                            <option value="">Seleccione un ciclo</option>
+                            <option value="ASIR">ASIR (Adm. de Sistemas Informáticos en Red)</option>
+                            <option value="DAM">DAM (Desarrollo de Aplicaciones Multiplataforma)</option>
+                            <option value="DAW">DAW (Desarrollo de Aplicaciones Web)</option>
+                        </select>
+                        {errors.academic_cycle && (
+                            <p className="text-red-500 text-xs mt-1 italic">{errors.academic_cycle}</p>
+                        )}
                     </div>
 
                     <div className="space-y-1.5">
@@ -193,14 +204,12 @@ export default function InternForm({ data, setData, errors, processing, centers,
                         {errors.academic_tutor && <p className="text-red-500 text-xs mt-1 italic">{errors.academic_tutor}</p>}
                     </div>
 
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-bold text-gray-800 ml-1">
-                            Estado del Becario <span className="text-red-500">*</span>
-                        </label>
+                    <div className="space-y-1.5 ">
+                        <Label required>Estado del Becario</Label>
                         <select 
                             value={data.status} 
                             onChange={e => setData('status', e.target.value as any)}
-                            className={inputClasses(errors.status)}
+                            className={interactiveClasses(errors.status)}
                         >
                             <option value="">Seleccione un estado</option>
                             <option value="active">Activo</option>
@@ -220,7 +229,7 @@ export default function InternForm({ data, setData, errors, processing, centers,
                             type="date" 
                             value={data.start_date} 
                             onChange={e => setData('start_date', e.target.value)}
-                            className={inputClasses(errors.start_date)}
+                            className={interactiveClasses(errors.start_date)}
                         />
                         {errors.start_date && <p className="text-red-500 text-xs mt-1 italic">{errors.start_date}</p>}
                     </div>
@@ -231,7 +240,7 @@ export default function InternForm({ data, setData, errors, processing, centers,
                             type="date"                 
                             value={data.end_date} 
                             onChange={e => setData('end_date', e.target.value)}
-                            className={inputClasses(errors.end_date)}
+                            className={interactiveClasses(errors.end_date)}
                         />
                         {errors.end_date && <p className="text-red-500 text-xs mt-1 italic">{errors.end_date}</p>}
                     </div>
@@ -252,13 +261,11 @@ export default function InternForm({ data, setData, errors, processing, centers,
                                 type="file" 
                                 accept={doc === 'dni' ? ".pdf,.jpg,.jpeg,.png" : ".pdf"}
                                 onChange={e => setData(`document_${doc}` as any, e.target.files ? e.target.files[0] : null)}
-                                className="block w-full text-xs text-gray-500
-                                    file:mr-3 file:py-2 file:px-4
-                                    file:rounded-lg file:border-0
-                                    file:text-xs file:font-bold
-                                    file:bg-gray-100 file:text-gray-700
-                                    hover:file:bg-gray-200 transition-all
-                                    cursor-pointer"
+                                className="block w-full text-xs text-gray-500 cursor-pointer 
+                                    file:cursor-pointer file:mr-3 file:py-2 file:px-4
+                                    file:rounded-lg file:border-0 file:text-xs file:font-bold
+                                    file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 
+                                    transition-all"
                             />
                             {errors[`document_${doc}`] && <p className="text-red-500 text-[10px] mt-2 italic font-medium">{errors[`document_${doc}`]}</p>}
                         </div>
@@ -269,7 +276,7 @@ export default function InternForm({ data, setData, errors, processing, centers,
             <div className="flex items-center justify-end gap-4">
                 <InertiaLink
                     href="/becarios"
-                    className="px-6 py-3 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all shadow-sm"
+                    className="px-6 py-3 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all shadow-sm cursor-pointer"
                 >
                     Cancelar
                 </InertiaLink>
@@ -277,7 +284,7 @@ export default function InternForm({ data, setData, errors, processing, centers,
                 <button 
                     type="submit" 
                     disabled={processing}
-                    className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >                   
                     {processing ? 'Procesando...' : submitText}
                 </button>

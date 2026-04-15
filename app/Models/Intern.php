@@ -14,7 +14,7 @@ class Intern extends Model implements HasMedia
     use HasFactory, SoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
-        'center_id', 'name', 'last_name', 'dni', 'email', 'phone', 
+        'user_id','center_id', 'name', 'last_name', 'dni', 'email', 'phone', 
         'address', 'status', 'start_date', 'end_date', 
         'academic_cycle', 'academic_tutor', 'total_hours', 'completed_hours'
     ];
@@ -27,8 +27,6 @@ class Intern extends Model implements HasMedia
         return (int) min(100, ($this->completed_hours / $this->total_hours) * 100);
     }
 
-
-
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('documents')
@@ -37,6 +35,10 @@ class Intern extends Model implements HasMedia
         $this->addMediaCollection('dni_scan')->singleFile();
         $this->addMediaCollection('convenio')->singleFile();
         $this->addMediaCollection('seguro')->singleFile();
+    }
+
+    public function tasks(): \Illuminate\Database\Eloquent\Relations\HasMany {
+        return $this->hasMany(Task::class);
     }
 
     public function center(): BelongsTo
