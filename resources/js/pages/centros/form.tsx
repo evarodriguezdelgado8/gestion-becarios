@@ -1,7 +1,7 @@
 import { Head, useForm, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { Center, BreadcrumbItem } from '@/types';
 import { Globe, MapPin, User, } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
+import type { Center, BreadcrumbItem } from '@/types';
 
 export default function Form({ center }: { center?: Center }) {
     const isEditing = !!center;

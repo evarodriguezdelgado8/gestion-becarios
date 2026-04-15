@@ -1,17 +1,17 @@
-import { useReducer, useState, useEffect, useMemo } from 'react';
 import { Head, router, Link, usePage } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import { 
     Plus, Calendar, User, 
     MessageSquare, Paperclip, Edit, Trash2,
     LayoutDashboard, List, CheckCircle2, Clock, AlertCircle, RefreshCw, XCircle
 } from 'lucide-react';
+import { useReducer, useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
-import TaskFormModal from './taskFormModal';
-import DeleteTaskModal from './deleteTaskModal';
-import { MultiSelect } from "@/components/ui/multi-select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { MultiSelect } from "@/components/ui/multi-select";
+import AppLayout from '@/layouts/app-layout';
+import DeleteTaskModal from './deleteTaskModal';
+import TaskFormModal from './taskFormModal';
 
 type Priority = 'low' | 'medium' | 'high' | 'urgent' | '';
 
@@ -130,6 +130,7 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
     }, [kanban]);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSearchQuery(filters.search || '');
         setSelectedInterns(filters.intern_id ? filters.intern_id.split(',') : []);
         setSelectedCenters(filters.center_id ? filters.center_id.split(',') : []);
@@ -138,30 +139,22 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
         setSelectedDate(filters.due_date || '');
     }, [filters]);
 
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            if (searchQuery !== (filters.search || '')) {
-                applyFilters({ search: searchQuery });
-            }
-        }, 500);
     
-        return () => clearTimeout(timeout);
-    }, [searchQuery]);
 
 
     const applyFilters = (overrides = {}) => {
         const params = {
             search: searchQuery,
-            intern_id: overrides.hasOwnProperty('intern_id') ? overrides.intern_id : (selectedInterns.length > 0 ? selectedInterns.join(',') : null),
-            center_id: overrides.hasOwnProperty('center_id') ? overrides.center_id : (selectedCenters.length > 0 ? selectedCenters.join(',') : null),
-            priority: overrides.hasOwnProperty('priority') ? overrides.priority : (selectedPriorities.length > 0 ? selectedPriorities.join(',') : null),
-            academic_cycle: overrides.hasOwnProperty('academic_cycle') ? overrides.academic_cycle : (selectedCycles.length > 0 ? selectedCycles.join(',') : null),
+            intern_id: 'intern_id' in overrides ? overrides.intern_id : (selectedInterns.length > 0 ? selectedInterns.join(',') : null),
+            center_id: 'center_id' in overrides ? overrides.center_id : (selectedCenters.length > 0 ? selectedCenters.join(',') : null),
+            priority: 'priority' in overrides ? overrides.priority : (selectedPriorities.length > 0 ? selectedPriorities.join(',') : null),
+            academic_cycle: 'academic_cycle' in overrides ? overrides.academic_cycle : (selectedCycles.length > 0 ? selectedCycles.join(',') : null),
             due_date: selectedDate,
             ...overrides 
         };
     
         const cleanParams = Object.fromEntries(
-            Object.entries(params).filter(([_, v]) => v !== "" && v !== null && v !== undefined)
+            Object.entries(params).filter((entry) => entry[1] !== "" && entry[1] !== null && entry[1] !== undefined)
         );
     
         router.get('/tareas', cleanParams as any, { 
@@ -184,6 +177,16 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
             preserveState: false
         });
     };
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (searchQuery !== (filters.search || '')) {
+                applyFilters({ search: searchQuery });
+            }
+        }, 500);
+    
+        return () => clearTimeout(timeout);
+    }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
     
 
@@ -247,8 +250,7 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
     const handleDrop = (e: React.DragEvent, destinationCol: string) => {
         e.preventDefault();
         setDragOverColumn(null);
-
-        const taskId = e.dataTransfer.getData("taskId");
+       
         const sourceCol = e.dataTransfer.getData("sourceCol");
         const sourceIndex = parseInt(e.dataTransfer.getData("sourceIndex"));
 

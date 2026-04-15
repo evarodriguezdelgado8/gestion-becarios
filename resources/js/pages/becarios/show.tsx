@@ -1,14 +1,13 @@
-import { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { Intern, BreadcrumbItem } from '@/types';
-import { toast } from 'sonner';
 import { 
     User, BookOpen, Calendar, 
     ArrowLeft, Download, FileText, 
     Clock, MapPin, Mail, Phone, Building2,
     ShieldCheck, Info, Copy, ClipboardList
 } from 'lucide-react';
+import { toast } from 'sonner';
+import AppLayout from '@/layouts/app-layout';
+import type { Intern, BreadcrumbItem } from '@/types';
 
 interface Props {
     intern: Intern;

@@ -1,11 +1,11 @@
 "use client"
 
-import React, { useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
 import { X, RefreshCcw, CheckSquare, Paperclip, Users } from 'lucide-react';
-import { MultiSelect } from "@/components/ui/multi-select";
-import { DatePicker } from "@/components/ui/date-picker";
+import React, { useEffect } from 'react';
 import { toast } from 'sonner';
+import { DatePicker } from "@/components/ui/date-picker";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 interface Props {
     isOpen: boolean;
@@ -14,10 +14,9 @@ interface Props {
     initialStatus?: string;
     interns: any[];
     centers: any[];
-    allTasks?: any[];
 }
 
-export default function TaskFormModal({ isOpen, onClose, task, initialStatus, interns, centers, allTasks }: Props) {
+export default function TaskFormModal({ isOpen, onClose, task, initialStatus, interns, centers }: Props) {
     const { data, setData, post, put, processing, reset, errors } = useForm({
         title: '',
         description: '',
@@ -65,7 +64,7 @@ export default function TaskFormModal({ isOpen, onClose, task, initialStatus, in
                 if (initialStatus) setData('status', initialStatus);
             }
         }
-    }, [task, isOpen]);
+    }, [task, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const toggleIntern = (id: number) => {
         const currentIds = [...data.intern_ids];

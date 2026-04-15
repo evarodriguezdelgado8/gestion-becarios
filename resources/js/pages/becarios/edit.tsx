@@ -1,7 +1,7 @@
-import AppLayout from '@/layouts/app-layout';
 import { Head, useForm } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import type { Center, Intern, InternFormData } from '@/types';
 import InternForm from './components/internForm';
-import { Center, Intern, InternFormData } from '@/types';
 
 interface Props {
     intern: Intern;

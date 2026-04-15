@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import { 
     Calendar, User, ArrowLeft, FileText, Send, 
     Paperclip, CheckCircle2, Clock, History, Plus, MessageSquare,
     Edit3, Trash2
 } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
+import AppLayout from '@/layouts/app-layout';
 
 // Importación de tus componentes modales
-import TaskFormModal from './taskFormModal';
 import DeleteTaskModal from './deleteTaskModal';
+import TaskFormModal from './taskFormModal';
 
 interface Props {
     task: any;

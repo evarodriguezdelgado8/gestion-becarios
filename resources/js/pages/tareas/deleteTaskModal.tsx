@@ -1,6 +1,6 @@
-import React from 'react';
 import { router } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
+import React from 'react';
 
 interface Props {
     isOpen: boolean;

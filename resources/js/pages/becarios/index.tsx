@@ -1,16 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
 import { Head, router, Link, usePage } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout'; 
-import { Intern, Pagination } from '@/types';
+import { debounce } from 'lodash';
 import { 
     User, Mail, Building2, GraduationCap, 
     Edit2, Trash2, Search, Plus,
-    MapPin, Copy, Check,
+    Copy, Check,
     Calendar, AlertCircle,
     AlertTriangle, Phone, FileDown, X
 } from 'lucide-react';
-import { debounce } from 'lodash';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import AppLayout from '@/layouts/app-layout'; 
+import type { Intern, Pagination } from '@/types';
 
 interface Props {
     interns: Pagination<Intern>;
@@ -58,7 +58,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
     };
      
 
-    const performSearch = useCallback(
+    const performSearch = useMemo(() =>
         debounce((newParams) => {
             router.get(
                 '/becarios', 

@@ -1,7 +1,7 @@
-import React from 'react';
-import { Center } from '@/types';
 import { Link as InertiaLink } from '@inertiajs/react';
 import { FileText, User, Building2, Clock } from 'lucide-react';
+import React from 'react';
+import type { Center } from '@/types';
 
 interface Props {
     data: any;
@@ -12,6 +12,12 @@ interface Props {
     submitText: string;
     isEdit?: boolean;
 }
+
+const Label = ({ children, required = false }: { children: React.ReactNode, required?: boolean }) => (
+    <label className="text-sm font-bold text-gray-800 ml-1">
+        {children} {required && <span className="text-red-500">*</span>}
+    </label>
+);
 
 export default function InternForm({ data, setData, errors, processing, centers, submitText, isEdit }: Props) {
     const inputClasses = (error: string) => `
@@ -26,11 +32,7 @@ export default function InternForm({ data, setData, errors, processing, centers,
         ${inputClasses(error)} cursor-pointer
     `;
 
-    const Label = ({ children, required = false }: { children: React.ReactNode, required?: boolean }) => (
-        <label className="text-sm font-bold text-gray-800 ml-1">
-            {children} {required && <span className="text-red-500">*</span>}
-        </label>
-    );
+    
 
     return (
         <div className="space-y-6">

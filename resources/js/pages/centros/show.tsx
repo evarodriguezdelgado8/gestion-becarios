@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { Center, BreadcrumbItem, Intern } from '@/types';
 import { User, Mail, Calendar, ArrowLeft, BadgeCheck, Clock, MapPin, Phone, XCircle, CalendarCheck, Globe } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
+import type { Center, BreadcrumbItem, Intern } from '@/types';
 
 export default function Show({ center, interns, stats }: { 
     center: Center, 
