@@ -1,4 +1,4 @@
-import { Head, router, Link, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { 
     Plus, Trash2, LayoutDashboard, List
 } from 'lucide-react';
@@ -51,7 +51,7 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
             due_date: selectedDate,
             ...overrides 
         };
-        const cleanParams = Object.fromEntries(Object.entries(params).filter(([_, v]) => v !== "" && v !== null && v !== undefined));
+        const cleanParams = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== "" && v !== null && v !== undefined));
         router.get('/tareas', cleanParams as any, { preserveState: true, replace: true, preserveScroll: true });
     };
 

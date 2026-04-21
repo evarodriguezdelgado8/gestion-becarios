@@ -1,12 +1,11 @@
 import { Head, router, Link, usePage } from '@inertiajs/react';
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { debounce } from 'lodash';
 import { 
     User, Mail, Building2, GraduationCap, 
-    Edit2, Trash2, Search, Plus,
+    Edit2, Trash2, Plus,
     Copy, Check, Calendar as CalendarIcon, AlertCircle,
-    AlertTriangle, Phone, FileDown, X
+    Phone, FileDown, X
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -46,6 +45,33 @@ const statusMap: Record<string, { label: string; class: string }> = {
     'abandoned': { label: 'Abandonado', class: 'bg-red-100 text-red-700' },
 };
 
+const FilterDatePicker = ({ name, value, label }: { name: string, value: string, label: string }) => (
+    <div>
+        <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">{label}</label>
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button
+                    variant={"outline"}
+                    className={cn(
+                        "w-full justify-start text-left font-normal h-[38px] border-gray-300 rounded-lg text-sm",
+                        !value && "text-gray-900"
+                    )}
+                >
+                    <CalendarIcon className="mr-2 h-3.5 w-3.5 text-gray-400" />
+                    {value ? format(new Date(value), "dd/MM/yyyy") : <span>dd/mm/aaaa</span>}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                    mode="single"
+                    selected={value ? new Date(value) : undefined}
+                    onSelect={(date) => handleFilterChange(name, date ? format(date, "yyyy-MM-dd") : '')}
+                />
+            </PopoverContent>
+        </Popover>
+    </div>
+);
+
 export default function Index({ interns, filters, centers, flash }: Props) {   
     const { auth } = usePage().props as any;
     const isAdmin = auth.user?.roles?.some((r: any) => {
@@ -67,7 +93,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
         end_to: filters.end_to || '',
     });
 
-    useEffect(() => {
+    /*useEffect(() => {
         setParams({
             search: filters.search || '',
             status: filters.status || '',
@@ -78,6 +104,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
             end_to: filters.end_to || '',
         });
     }, [filters]);
+    */
 
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
@@ -126,32 +153,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
         return `${day}/${month}/${year}`;
     };
 
-    const FilterDatePicker = ({ name, value, label }: { name: string, value: string, label: string }) => (
-        <div>
-            <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">{label}</label>
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button
-                        variant={"outline"}
-                        className={cn(
-                            "w-full justify-start text-left font-normal h-[38px] border-gray-300 rounded-lg text-sm",
-                            !value && "text-gray-900"
-                        )}
-                    >
-                        <CalendarIcon className="mr-2 h-3.5 w-3.5 text-gray-400" />
-                        {value ? format(new Date(value), "dd/MM/yyyy") : <span>dd/mm/aaaa</span>}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        mode="single"
-                        selected={value ? new Date(value) : undefined}
-                        onSelect={(date) => handleFilterChange(name, date ? format(date, "yyyy-MM-dd") : '')}
-                    />
-                </PopoverContent>
-            </Popover>
-        </div>
-    );
+    
 
     const columns: Column<Intern>[] = [
         {
