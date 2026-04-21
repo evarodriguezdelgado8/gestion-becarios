@@ -1,18 +1,18 @@
-import { Head, router, Link, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { 
     Plus, Trash2, LayoutDashboard, List
 } from 'lucide-react';
 import { useReducer, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { DatePicker } from "@/components/ui/date-picker";
 import { MultiSelect } from "@/components/ui/multi-select";
 import AppLayout from '@/layouts/app-layout';
-import TaskFormModal from './taskFormModal';
-import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
 import KanbanColumn from './components/kanbanColumn';
 import TaskTableRow from './components/taskTableRow';
+import TaskFormModal from './taskFormModal';
 import { kanbanReducer } from './taskUtils';
 
 export default function Index({ kanban = {}, interns = [], centers = [], filters }: any) {
@@ -51,7 +51,7 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
             due_date: selectedDate,
             ...overrides 
         };
-        const cleanParams = Object.fromEntries(Object.entries(params).filter(([_, v]) => v !== "" && v !== null && v !== undefined));
+        const cleanParams = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== "" && v !== null && v !== undefined));
         router.get('/tareas', cleanParams as any, { preserveState: true, replace: true, preserveScroll: true });
     };
 

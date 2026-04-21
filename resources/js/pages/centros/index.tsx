@@ -8,12 +8,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
 // Componentes Comunes
-import AppLayout from '@/layouts/app-layout';
 import DataTable from '@/components/common/DataTable';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import SearchInput from '@/components/common/SearchInput'; // <-- Nuevo
+import AppLayout from '@/layouts/app-layout';
 
-import type { Center, BreadcrumbItem, Pagination } from '@/types';
+import type { Center, Pagination } from '@/types';
 
 export default function Index({
     centers,
@@ -52,7 +52,7 @@ export default function Index({
 
     useEffect(() => {
         if (search !== filters.search) performSearch(search);
-    }, [search]);
+    }, [search, filters.search, performSearch]);
 
     const confirmDelete = () => {
         if (centerToDelete) {

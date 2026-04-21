@@ -1,14 +1,14 @@
 import { Link as InertiaLink } from '@inertiajs/react';
+import { format } from "date-fns";
 import { FileText, User, Building2, Clock, Calendar as CalendarIcon } from 'lucide-react';
 import React from 'react';
-import type { Center } from '@/types';
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-
-// Importamos tus componentes de UI
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar"; 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { Center } from '@/types';
+
+// Importamos tus componentes de UI
 
 interface Props {
     data: any;
@@ -26,6 +26,33 @@ const Label = ({ children, required = false }: { children: React.ReactNode, requ
     </label>
 );
 
+// Componente interno para el DatePicker con formato DD/MM/YYYY
+const DatePickerField = ({ value, onChange, error }: { value: string, onChange: (date: Date | undefined) => void, error: string }) => (
+    <Popover>
+        <PopoverTrigger asChild>
+            <Button
+                variant={"outline"}
+                className={cn(
+                    "w-full justify-start text-left font-normal h-[42px] border-gray-300 hover:border-gray-400 rounded-lg bg-white shadow-sm",
+                    !value && "text-gray-400",
+                    error && "border-red-500"
+                )}
+            >
+                <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
+                {value ? format(new Date(value), "dd/MM/yyyy") : <span>DD/MM/AAAA</span>}
+            </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0 border-gray-200 shadow-xl" align="start">
+            <Calendar
+                mode="single"
+                selected={value ? new Date(value) : undefined}
+                onSelect={onChange}
+                initialFocus
+            />
+        </PopoverContent>
+    </Popover>
+);
+
 export default function InternForm({ data, setData, errors, processing, centers, submitText, isEdit }: Props) {
     
     const inputClasses = (error: string) => `
@@ -40,33 +67,7 @@ export default function InternForm({ data, setData, errors, processing, centers,
         ${inputClasses(error)} cursor-pointer
     `;
 
-    // Componente interno para el DatePicker con formato DD/MM/YYYY
-    const DatePickerField = ({ value, onChange, error }: { value: string, onChange: (date: Date | undefined) => void, error: string }) => (
-        <Popover>
-            <PopoverTrigger asChild>
-                <Button
-                    variant={"outline"}
-                    className={cn(
-                        "w-full justify-start text-left font-normal h-[42px] border-gray-300 hover:border-gray-400 rounded-lg bg-white shadow-sm",
-                        !value && "text-gray-400",
-                        error && "border-red-500"
-                    )}
-                >
-                    <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
-                    {/* CAMBIO AQUÍ: Formato dd/MM/yyyy */}
-                    {value ? format(new Date(value), "dd/MM/yyyy") : <span>DD/MM/AAAA</span>}
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 border-gray-200 shadow-xl" align="start">
-                <Calendar
-                    mode="single"
-                    selected={value ? new Date(value) : undefined}
-                    onSelect={onChange}
-                    initialFocus
-                />
-            </PopoverContent>
-        </Popover>
-    );
+    
 
     return (
         <div className="space-y-6">
