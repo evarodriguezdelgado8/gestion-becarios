@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import {
     Table,
     TableBody,
@@ -6,8 +7,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Pagination as PaginationType } from "@/types";
-import { router } from '@inertiajs/react';
+import type { Pagination as PaginationType } from "@/types";
 
 export interface Column<T> {
     header: string;

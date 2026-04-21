@@ -5,14 +5,14 @@ import {
 import { useReducer, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { DatePicker } from "@/components/ui/date-picker";
 import { MultiSelect } from "@/components/ui/multi-select";
 import AppLayout from '@/layouts/app-layout';
-import TaskFormModal from './taskFormModal';
-import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
 import KanbanColumn from './components/kanbanColumn';
 import TaskTableRow from './components/taskTableRow';
+import TaskFormModal from './taskFormModal';
 import { kanbanReducer } from './taskUtils';
 
 export default function Index({ kanban = {}, interns = [], centers = [], filters }: any) {

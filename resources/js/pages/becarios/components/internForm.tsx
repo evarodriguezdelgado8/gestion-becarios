@@ -1,14 +1,14 @@
 import { Link as InertiaLink } from '@inertiajs/react';
+import { format } from "date-fns";
 import { FileText, User, Building2, Clock, Calendar as CalendarIcon } from 'lucide-react';
 import React from 'react';
-import type { Center } from '@/types';
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-
-// Importamos tus componentes de UI
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar"; 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { Center } from '@/types';
+
+// Importamos tus componentes de UI
 
 interface Props {
     data: any;

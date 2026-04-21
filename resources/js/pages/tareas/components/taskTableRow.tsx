@@ -1,6 +1,6 @@
-import React from 'react';
 import { Link } from '@inertiajs/react';
 import { Edit, Trash2, User, Calendar } from 'lucide-react';
+import React from 'react';
 import { getStatusConfig, STATUS_LABELS, PRIORITY_LABELS, getPriorityStyle, getDueDateStyle } from '../taskUtils';
 
 export default function TaskTableRow({ task, isBecario, onEdit, onDelete }: any) {

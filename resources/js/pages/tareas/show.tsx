@@ -6,9 +6,9 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import AppLayout from '@/layouts/app-layout';
 
-import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import TaskFormModal from './taskFormModal';
 import { getStatusConfig, STATUS_LABELS, PRIORITY_LABELS, getPriorityStyle } from './taskUtils';
 

@@ -1,4 +1,6 @@
 import { Head, router, Link, usePage } from '@inertiajs/react';
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { debounce } from 'lodash';
 import { 
     User, Mail, Building2, GraduationCap, 
@@ -8,19 +10,18 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 
-import AppLayout from '@/layouts/app-layout'; 
-import DataTable, { Column } from '@/components/common/DataTable';
+import type { Column } from '@/components/common/DataTable';
+import DataTable from '@/components/common/DataTable';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import SearchInput from '@/components/common/SearchInput';
 
 // Importamos tus componentes de UI
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar"; 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+import AppLayout from '@/layouts/app-layout'; 
+import { cn } from "@/lib/utils";
 
 import type { Intern, Pagination } from '@/types';
 
