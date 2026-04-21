@@ -21,20 +21,16 @@ class TaskController extends Controller
      */
     public function index(Request $request)
     {
-        
         $user = Auth::user();
-        // Detectamos si el usuario es un becario
         $internProfile = \App\Models\Intern::where('user_id', $user->id)->first();
 
         $tasks = Task::query()
-            ->with(['intern:id,name,last_name,academic_cycle', 'creator:id,name', 'media'])
+            ->with(['intern:id,name,last_name,academic_cycle', 'creator:id,name', 'media', 'comments'])
             
-            // 1. Filtro de seguridad: Si es becario, solo ve lo suyo
             ->when($internProfile, function ($query) use ($internProfile) {
                 $query->where('intern_id', $internProfile->id);
             })
 
-            // 2. Filtro de búsqueda (Título y Descripción)
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function($q) use ($search) {
                     $q->where('title', 'ilike', "%{$search}%")
@@ -42,33 +38,27 @@ class TaskController extends Controller
                 });
             })
 
-            // 3. Filtro por Centro (Multiselección)
             ->when($request->input('center_id'), function ($query, $centerIds) {
                 $ids = is_array($centerIds) ? $centerIds : explode(',', $centerIds);
                 $query->whereIn('center_id', $ids);
             })
 
-            // 4. Filtro por beacrio (Multiselección)
             ->when($request->input('intern_id'), function ($query, $internIds) {
                 $ids = is_array($internIds) ? $internIds : explode(',', $internIds);
                 $query->whereIn('intern_id', $ids);
             })
 
-            // 5. Filtro por Prioridad (Multiselección)
             ->when($request->input('priority'), function ($query, $priorities) {
                 $list = is_array($priorities) ? $priorities : explode(',', $priorities);
                 $query->whereIn('priority', $list);
             })
 
-            // 6. Filtro por Fecha de Vencimiento
             ->when($request->input('due_date'), function ($query, $date) {
                 $query->whereDate('due_date', $date);
             })
 
-            // 7. Filtro por Ciclo Académico (Multiselección Insensible a Mayúsculas)
             ->when($request->input('academic_cycle'), function ($query, $cycles) {
                 $cyclesArray = is_array($cycles) ? $cycles : explode(',', $cycles);
-                // Convertimos todos los ciclos buscados a minúsculas
                 $cyclesLower = array_map('strtolower', $cyclesArray);
 
                 $query->whereHas('intern', function ($q) use ($cyclesLower) {
@@ -95,7 +85,6 @@ class TaskController extends Controller
             'kanban'  => $kanban,
             'interns' => Intern::all(['id', 'name', 'last_name', 'center_id', 'academic_cycle']),
             'centers' => Center::all(['id', 'name']),
-            // Enviamos los filtros actuales para que los inputs no se vacíen al recargar
             'filters' => $request->only(['search', 'center_id', 'intern_id', 'priority', 'academic_cycle', 'due_date']),
         ]);
     }
@@ -317,38 +306,37 @@ class TaskController extends Controller
         $newIndex = $request->new_index;
 
         DB::transaction(function () use ($task, $oldStatus, $newStatus, $newIndex) {
+            Task::where('status', $newStatus)
+                ->where('order_index', '>=', $newIndex)
+                ->increment('order_index');
+
             $task->update([
                 'status' => $newStatus,
+                'order_index' => $newIndex,
                 'completed_at' => $newStatus === 'completed' ? now() : ($newStatus === 'pending' ? null : $task->completed_at)
             ]);
 
             $this->reorderTasks($oldStatus);
-
-            Task::where('status', $newStatus)
-                ->where('id', '!=', $task->id)
-                ->where('order_index', '>=', $newIndex)
-                ->increment('order_index');
-
-            $task->order_index = $newIndex;
-            $task->saveQuietly(); 
-            
-            $this->reorderTasks($newStatus);
+            if ($oldStatus !== $newStatus) {
+                $this->reorderTasks($newStatus);
+            }
         });
 
-        return redirect()->back()->with('success', 'Estado actualizado.');
+        return redirect()->back();
     }
 
-private function reorderTasks($status)
-{
-    $tasks = Task::where('status', $status)
-        ->orderBy('order_index', 'asc')
-        ->orderBy('updated_at', 'desc')
-        ->get();
+    private function reorderTasks($status)
+    {
+        $tasks = Task::where('status', $status)
+            ->orderBy('order_index', 'asc')
+            ->orderBy('updated_at', 'desc')
+            ->get();
 
-    foreach ($tasks as $index => $t) {
-        $t->update(['order_index' => $index]);
+        foreach ($tasks as $index => $t) {
+            $t->order_index = $index;
+            $t->saveQuietly();
+        }
     }
-}
 
     /**
      * Add feedback/comments to a task.

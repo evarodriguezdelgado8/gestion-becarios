@@ -24,7 +24,8 @@ class Task extends Model implements HasMedia
         'intern_id', 
         'center_id', 
         'due_date', 
-        'completed_at'
+        'completed_at',
+        'order_index'
     ];
 
     public function getActivitylogOptions(): LogOptions

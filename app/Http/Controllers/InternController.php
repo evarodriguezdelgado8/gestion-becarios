@@ -25,31 +25,34 @@ class InternController extends Controller
             'interns' => Intern::query()
                 ->with('center:id,name')
                 ->when($request->input('search'), function ($query, $search) {
-                    $query->where('name', 'ilike', "%{$search}%")
+                    $query->where(function($q) use ($search) {
+                        $q->where('name', 'ilike', "%{$search}%")
                         ->orWhere('last_name', 'ilike', "%{$search}%")
                         ->orWhere('dni', 'ilike', "%{$search}%")
                         ->orWhere('email', 'ilike', "%{$search}%");
+                    });
                 })
-                ->when($request->input('center_id'), function ($query, $centerId) {
-                    $query->where('center_id', $centerId);
-                })
-                ->when($request->input('status'), function ($query, $status) {
-                    $query->where('status', $status);
-                })
-                ->when($request->input('from'), fn($q, $from) => $q->whereDate('start_date', '>=', $from))
-                ->when($request->input('to'), fn($q, $to) => $q->whereDate('end_date', '<=', $to))
+                ->when($request->input('center_id'), fn($q, $id) => $q->where('center_id', $id))
+                ->when($request->input('status'), fn($q, $st) => $q->where('status', $st))
+                
+                ->when($request->input('start_from'), fn($q, $date) => $q->whereDate('start_date', '>=', $date))
+                ->when($request->input('start_to'), fn($q, $date) => $q->whereDate('start_date', '<=', $date))
+                
+                ->when($request->input('end_from'), fn($q, $date) => $q->whereDate('end_date', '>=', $date))
+                ->when($request->input('end_to'), fn($q, $date) => $q->whereDate('end_date', '<=', $date))
 
                 ->latest()
                 ->paginate(10)
                 ->withQueryString(),
-            'filters' => $request->only(['search']),
+
+            'filters' => $request->only(['search', 'status', 'center_id', 'start_from', 'start_to', 'end_from', 'end_to']),
             'centers' => Center::all(['id', 'name']),
         ]);
-}
+    }
 
     public function export(Request $request)
     {
-        $filters = $request->only(['search', 'center_id', 'status', 'from', 'to']);
+        $filters = $request->only(['search', 'center_id', 'status', 'start_from', 'start_to', 'end_from', 'end_to']);
         $fileName = 'becarios_periodo_' . now()->format('d-m-Y_Hi') . '.xlsx';
 
         return Excel::download(new InternsExport($filters), $fileName);

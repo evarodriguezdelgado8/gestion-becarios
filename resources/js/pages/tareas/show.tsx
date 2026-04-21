@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { 
     Calendar, User, ArrowLeft, FileText, Send, 
     Paperclip, CheckCircle2, Clock, History, Plus, MessageSquare,
@@ -8,9 +8,9 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import AppLayout from '@/layouts/app-layout';
 
-// Importación de tus componentes modales
-import DeleteTaskModal from './deleteTaskModal';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import TaskFormModal from './taskFormModal';
+import { getStatusConfig, STATUS_LABELS, PRIORITY_LABELS, getPriorityStyle } from './taskUtils';
 
 interface Props {
     task: any;
@@ -33,12 +33,21 @@ interface Props {
 export default function Show({ task, activityLog, documents, interns, centers }: Props) {
     const { auth } = usePage().props as any;
     
+    // Definición de permisos: Admin y Tutor pueden gestionar la tarea
+    const canManage = auth.user?.roles?.some((r: any) => {
+        const roleName = (typeof r === 'object' ? r.name : r)?.toLowerCase();
+        return roleName?.includes('admin') || roleName?.includes('tutor');
+    });
+
     const [activeTab, setActiveTab] = useState<'chat' | 'history'>('chat');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const chatForm = useForm({ body: '' });
     const deliveryForm = useForm({ deliverable: null as File | null });
+
+    const statusConfig = getStatusConfig(task.status);
+    const StatusIcon = statusConfig.icon;
 
     const submitComment = (e: React.SyntheticEvent) => {
         e.preventDefault();
@@ -56,38 +65,37 @@ export default function Show({ task, activityLog, documents, interns, centers }:
         });
     };
 
-    const PRIORITY_LABELS: Record<string, string> = { urgent: 'Urgente', high: 'Alta', medium: 'Media', low: 'Baja' };
-    const STATUS_LABELS: Record<string, string> = { pending: 'Pendiente', in_progress: 'En Progreso', in_review: 'En Revisión', completed: 'Completada', rejected: 'Rechazada' };
-
-    const getPriorityColor = (priority: string) => {
-        const colors: any = {
-            urgent: 'text-red-600 bg-red-50 border-red-100',
-            high: 'text-orange-600 bg-orange-50 border-orange-100',
-            medium: 'text-blue-600 bg-blue-50 border-blue-100',
-            low: 'text-slate-600 bg-slate-50 border-slate-100'
-        };
-        return colors[priority] || colors.low;
+    const confirmDelete = () => {
+        router.delete(`/tareas/${task.id}`, {
+            onSuccess: () => {
+                toast.success('Tarea eliminada correctamente');
+                setIsDeleting(false);
+            },
+            onError: () => toast.error('No se pudo eliminar la tarea')
+        });
     };
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Tablero', href: '/tareas' }, { title: 'Detalle', href: '#' }]}>
             <Head title={task.title} />
 
-            <div className="w-full bg-slate-50/30 min-h-screen">
-                <div className="max-w-[1400px] mx-auto p-6 lg:p-10 space-y-6">
+            <div className="w-full bg-slate-50/30 min-h-screen overflow-x-auto">
+                <div className="max-w-[1400px] mx-auto p-6 lg:p-10 space-y-6 min-w-[1100px]">
                     
-                    <div className="flex justify-between items-center mb-2">
-                        <Link href="/tareas" className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-medium text-sm">
-                            <ArrowLeft size={16} /> Volver al tablero de tareas
+                    <div className="flex justify-between items-center mb-6">
+                        <Link 
+                            href="/tareas" 
+                            className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors bg-blue-50 px-3 py-1.5 rounded-lg"
+                        >
+                            <ArrowLeft className="w-4 h-4" /> Volver al tablero de tareas
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-8">
+                    <div className="grid grid-cols-3 gap-8 items-start">
                         
-                        {/* COLUMNA IZQUIERDA Y CENTRAL (2/3) */}
+                        {/* Columna Izquierda */}
                         <div className="col-span-2 space-y-6">
                             
-                            {/* Información Tarea */}
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="space-y-1">
@@ -96,7 +104,7 @@ export default function Show({ task, activityLog, documents, interns, centers }:
                                             <Clock size={14} /> <span>Creada por {task.creator?.name}</span>
                                         </div>
                                     </div>
-                                    <div className={`px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-wider ${getPriorityColor(task.priority)}`}>
+                                    <div className={`px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-wider ${getPriorityStyle(task.priority)}`}>
                                         {PRIORITY_LABELS[task.priority]}
                                     </div>
                                 </div>
@@ -121,7 +129,6 @@ export default function Show({ task, activityLog, documents, interns, centers }:
                                 )}
                             </div>
 
-                            {/* SISTEMA DE PESTAÑAS (Tabs) */}
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[600px]">
                                 <div className="flex border-b bg-slate-50/50 px-4">
                                     <button 
@@ -164,21 +171,14 @@ export default function Show({ task, activityLog, documents, interns, centers }:
                                                 const data = log.attribute_changes || log.properties || {};
                                                 const attributes = data.attributes || {};
                                                 const old = data.old || {}; 
-
                                                 return (
                                                     <div key={log.id} className="relative pl-10 pb-8 last:pb-2">
                                                         <div className="absolute left-0 top-1.5 w-6 h-6 rounded-full bg-white border-4 border-blue-500 shadow-sm z-10" />
                                                         <div className="space-y-1">
                                                             <p className="text-sm font-bold text-slate-800 leading-tight">
-                                                                {log.description === 'created' ? (
-                                                                    "Tarea creada"
-                                                                ) : attributes.status ? (
-                                                                    <>
-                                                                        Movida de <span className="text-slate-400 font-medium">{STATUS_LABELS[old.status] || '...'}</span> a <span className="text-blue-600">{STATUS_LABELS[attributes.status]}</span>
-                                                                    </>
-                                                                ) : (
-                                                                    log.translation || "Tarea actualizada"
-                                                                )}
+                                                                {log.description === 'created' ? "Tarea creada" : attributes.status ? (
+                                                                    <>Movida de <span className="text-slate-400 font-medium">{STATUS_LABELS[old.status] || '...'}</span> a <span className="text-blue-600">{STATUS_LABELS[attributes.status]}</span></>
+                                                                ) : (log.translation || "Tarea actualizada")}
                                                             </p>
                                                             <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                                                                 <span className="text-blue-600">{log.user}</span>
@@ -210,29 +210,21 @@ export default function Show({ task, activityLog, documents, interns, centers }:
                             </div>
                         </div>
 
-                        {/* COLUMNA DERECHA (1/3) */}
-                        <div className="space-y-6">
+                        {/* Columna Derecha */}
+                        <div className="col-span-1 space-y-6">
                             
-                            {/* BOTONES DE ACCIÓN */}
-                            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex gap-3">
-                                <button 
-                                    onClick={() => setIsEditModalOpen(true)}
-                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 hover:text-blue-700 transition-all border border-blue-100"
-                                >
-                                    <Edit3 size={16} /> 
-                                    <span>Editar</span>
-                                </button>
-                                
-                                <button 
-                                    onClick={() => setIsDeleteModalOpen(true)}
-                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs font-bold hover:bg-red-100 hover:text-red-700 transition-all border border-red-100"
-                                >
-                                    <Trash2 size={16} /> 
-                                    <span>Borrar</span>
-                                </button>
-                            </div>
+                            {/* BOTONES: Visibles para Admin y Tutor */}
+                            {canManage && (
+                                <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex gap-3">
+                                    <button onClick={() => setIsEditModalOpen(true)} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition-all border border-blue-100">
+                                        <Edit3 size={16} /> <span>Editar</span>
+                                    </button>
+                                    <button onClick={() => setIsDeleting(true)} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs font-bold hover:bg-red-100 transition-all border border-red-100">
+                                        <Trash2 size={16} /> <span>Borrar</span>
+                                    </button>
+                                </div>
+                            )}
 
-                            {/* SEGUIMIENTO */}
                             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                                 <h3 className="font-bold text-slate-900 mb-6 border-b pb-3 text-sm uppercase tracking-tight">Seguimiento</h3>
                                 <div className="space-y-5">
@@ -240,7 +232,7 @@ export default function Show({ task, activityLog, documents, interns, centers }:
                                         <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500"><User size={20} /></div>
                                         <div>
                                             <p className="text-[10px] uppercase font-bold text-slate-400">Responsable</p>
-                                            <p className="text-sm font-bold text-slate-700">{task.intern?.name} {task.intern?.last_name}</p>
+                                            <p className="text-sm font-bold text-slate-700">{task.intern ? `${task.intern.name} ${task.intern.last_name}` : 'Sin asignar'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -251,14 +243,14 @@ export default function Show({ task, activityLog, documents, interns, centers }:
                                         </div>
                                     </div>
                                     <div className="pt-4">
-                                        <div className="p-3 rounded-xl text-center text-xs font-black text-blue-600 bg-blue-50 border border-blue-100 uppercase">
+                                        <div className={`p-3 rounded-xl text-center text-xs font-black uppercase border shadow-sm flex items-center justify-center gap-2 ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}>
+                                            <StatusIcon size={14} />
                                             {STATUS_LABELS[task.status]}
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* ENTREGABLES COMPACTO */}
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                                 <div className="p-4 border-b bg-slate-50 font-bold text-slate-700 text-xs flex items-center gap-2 uppercase">
                                     <CheckCircle2 size={14} className="text-green-500" /> Entregables
@@ -288,13 +280,11 @@ export default function Show({ task, activityLog, documents, interns, centers }:
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* MODALES */}
             <TaskFormModal 
                 isOpen={isEditModalOpen} 
                 onClose={() => setIsEditModalOpen(false)} 
@@ -303,10 +293,12 @@ export default function Show({ task, activityLog, documents, interns, centers }:
                 centers={centers}
             />
 
-            <DeleteTaskModal 
-                isOpen={isDeleteModalOpen} 
-                onClose={() => setIsDeleteModalOpen(false)} 
-                task={task} 
+            <DeleteConfirmModal 
+                isOpen={isDeleting}
+                onClose={() => setIsDeleting(false)}
+                onConfirm={confirmDelete}
+                title="¿Eliminar tarea?"
+                itemName={task.title}
             />
         </AppLayout>
     );
