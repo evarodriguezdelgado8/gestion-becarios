@@ -3,13 +3,25 @@ import { debounce } from 'lodash';
 import { 
     User, Mail, Building2, GraduationCap, 
     Edit2, Trash2, Search, Plus,
-    Copy, Check,
-    Calendar, AlertCircle,
+    Copy, Check, Calendar as CalendarIcon, AlertCircle,
     AlertTriangle, Phone, FileDown, X
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
 import AppLayout from '@/layouts/app-layout'; 
+import DataTable, { Column } from '@/components/common/DataTable';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
+import SearchInput from '@/components/common/SearchInput';
+
+// Importamos tus componentes de UI
+import { Calendar } from "@/components/ui/calendar"; 
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+
 import type { Intern, Pagination } from '@/types';
 
 interface Props {
@@ -18,12 +30,20 @@ interface Props {
         search?: string; 
         status?: string; 
         center_id?: string; 
-        from_date?: string; 
-        to_date?: string; 
+        start_from?: string; 
+        start_to?: string;
+        end_from?: string;
+        end_to?: string;
     };
     centers: { id: number; name: string }[];
     flash?: { success?: string; error?: string };
 }
+
+const statusMap: Record<string, { label: string; class: string }> = {
+    'active': { label: 'Activo', class: 'bg-green-100 text-green-700' },
+    'finished': { label: 'Finalizado', class: 'bg-blue-100 text-blue-700' },
+    'abandoned': { label: 'Abandonado', class: 'bg-red-100 text-red-700' },
+};
 
 export default function Index({ interns, filters, centers, flash }: Props) {   
     const { auth } = usePage().props as any;
@@ -31,6 +51,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
         const roleName = typeof r === 'object' ? r.name : r;
         return roleName?.toLowerCase().includes('admin');
     });
+
     const [copiedEmail, setCopiedEmail] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [internToDelete, setInternToDelete] = useState<Intern | null>(null);
@@ -39,410 +60,305 @@ export default function Index({ interns, filters, centers, flash }: Props) {
         search: filters.search || '',
         status: filters.status || '',
         center_id: filters.center_id || '',
-        from_date: filters.from_date || '',
-        to_date: filters.to_date || '',
+        start_from: filters.start_from || '',
+        start_to: filters.start_to || '',
+        end_from: filters.end_from || '',
+        end_to: filters.end_to || '',
     });
+
+    useEffect(() => {
+        setParams({
+            search: filters.search || '',
+            status: filters.status || '',
+            center_id: filters.center_id || '',
+            start_from: filters.start_from || '',
+            start_to: filters.start_to || '',
+            end_from: filters.end_from || '',
+            end_to: filters.end_to || '',
+        });
+    }, [filters]);
 
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
         if (flash?.error) toast.error(flash.error);
     }, [flash]);
 
-    const copyToClipboard = (email: string, id: number) => {
-        navigator.clipboard.writeText(email);
-        setCopiedEmail(id);
-        toast.info('Copiado al portapapeles', {
-            icon: <Copy className="w-4 h-4 text-blue-600" />,
-        });
-        setTimeout(() => setCopiedEmail(null), 2000);
-    };
-     
-
     const performSearch = useMemo(() =>
         debounce((newParams) => {
-            router.get(
-                '/becarios', 
-                newParams, 
-                { preserveState: true, replace: true, preserveScroll: true }
-            );
+            router.get('/becarios', newParams, { 
+                preserveState: true, 
+                replace: true, 
+                preserveScroll: true 
+            });
         }, 300),
         []
     );
 
-    const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        
+    const handleFilterChange = (name: string, value: string) => {
         const newParams = { ...params, [name]: value };
         setParams(newParams);
-
+        
         if (name === 'search') {
             performSearch(newParams);
         } else {
             router.get('/becarios', newParams, { 
                 preserveState: true, 
-                replace: true, 
+                replace: true,
                 preserveScroll: true 
             });
         }
     };
 
     const resetFilters = () => {
-        setParams({ search: '', status: '', center_id: '', from_date: '', to_date: '' });
+        const empty = { 
+            search: '', status: '', center_id: '', 
+            start_from: '', start_to: '', 
+            end_from: '', end_to: '' 
+        };
+        setParams(empty);
+        router.get('/becarios', empty);
     };
 
-    const openDeleteModal = (becario: Intern) => {
-        setInternToDelete(becario);
-        setIsDeleting(true);
-    };
-
-    const confirmDelete = () => {
-        if (internToDelete) {
-            router.delete(`/becarios/${internToDelete.id}`, {
-                onSuccess: () => {
-                    setIsDeleting(false);
-                    setInternToDelete(null);
-                },
-                onFinish: () => setIsDeleting(false)
-            });
-        }
-    };
-
-    const breadcrumbs = [{ title: 'Becarios', href: '/becarios' }];
-
-    const getExportUrl = () => {
-        const queryParams = new URLSearchParams(params as any);
-        return `/becarios/export?${queryParams.toString()}`;
-    };
-
-    const statusMap: Record<string, { label: string; class: string }> = {
-        'active': { label: 'Activo', class: 'bg-green-100 text-green-700' },
-        'finished': { label: 'Finalizado', class: 'bg-blue-100 text-blue-700' },
-        'abandoned': { label: 'Abandonado', class: 'bg-red-100 text-red-700' },
-    };
-
-    const formatDate = (dateString: string | null) => {
+    const formatDateDisplay = (dateString: string | null) => {
         if (!dateString) return 'Indefinido';
         const [year, month, day] = dateString.split('-');
         return `${day}/${month}/${year}`;
     };
 
+    const FilterDatePicker = ({ name, value, label }: { name: string, value: string, label: string }) => (
+        <div>
+            <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">{label}</label>
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant={"outline"}
+                        className={cn(
+                            "w-full justify-start text-left font-normal h-[38px] border-gray-300 rounded-lg text-sm",
+                            !value && "text-gray-900"
+                        )}
+                    >
+                        <CalendarIcon className="mr-2 h-3.5 w-3.5 text-gray-400" />
+                        {value ? format(new Date(value), "dd/MM/yyyy") : <span>dd/mm/aaaa</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        mode="single"
+                        selected={value ? new Date(value) : undefined}
+                        onSelect={(date) => handleFilterChange(name, date ? format(date, "yyyy-MM-dd") : '')}
+                    />
+                </PopoverContent>
+            </Popover>
+        </div>
+    );
+
+    const columns: Column<Intern>[] = [
+        {
+            header: 'Becario / Datos Personales',
+            className: 'min-w-[220px]',
+            render: (becario) => (
+                <div className="flex items-start gap-3 py-1">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0 mt-1">
+                        <User className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                        <Link href={`/becarios/${becario.id}`} className="font-bold text-gray-900 text-base hover:text-blue-600 transition-colors leading-tight">
+                            {becario.name} {becario.last_name}
+                        </Link>
+                        <div className="text-[13px] text-gray-600 font-mono">
+                            <span className="font-semibold text-gray-400">DNI:</span> {becario.dni}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                            <Phone className="w-3.5 h-3.5 text-gray-400" /> {becario.phone || 'N/A'}
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Mail className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="text-sm text-gray-600 truncate max-w-[140px]">{becario.email}</span>
+                            <button onClick={() => {
+                                navigator.clipboard.writeText(becario.email);
+                                setCopiedEmail(becario.id);
+                                toast.info('Copiado al portapapeles');
+                                setTimeout(() => setCopiedEmail(null), 2000);
+                            }} className="text-gray-400 hover:text-blue-600 p-1 cursor-pointer">
+                                {copiedEmail === becario.id ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )
+        },
+        {
+            header: 'Centro y Tutor',
+            className: 'min-w-[220px]',
+            render: (becario) => (
+                <div className="space-y-1 py-1">
+                    <div className="flex items-start gap-1.5 text-gray-900 font-bold text-base leading-tight">
+                        <Building2 className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                        {becario.center ? (
+                            <Link href={`/centros/${becario.center.id}`} className="hover:text-blue-600 transition-colors break-words">
+                                {becario.center.name}
+                            </Link>
+                        ) : <span className="text-gray-400 italic font-normal text-sm">Sin centro</span>}
+                    </div>
+                    <div className="text-[13px] text-gray-700/70 flex items-center gap-1.5 ml-6 font-bold uppercase">
+                        <User className="w-3.5 h-3.5 text-gray-400" /> {becario.academic_tutor || 'Sin tutor'}
+                    </div>
+                    <div className="text-sm font-medium text-gray-600 flex items-center gap-1.5 ml-6">
+                        <GraduationCap className="w-4 h-4 text-gray-400" /> {becario.academic_cycle || 'N/A'}
+                    </div>
+                </div>
+            )
+        },
+        {
+            header: 'Estado y Progreso',
+            className: 'min-w-[200px]',
+            render: (becario) => {
+                const statusInfo = statusMap[becario.status] || { label: becario.status, class: 'bg-gray-100 text-gray-600' };
+                const progress = Math.round((becario.completed_hours / (becario.total_hours || 400)) * 100);
+                return (
+                    <div className="space-y-2 py-1">
+                        <div className="flex justify-between items-end text-[11px]">
+                            <span className={`px-2 py-0.5 rounded-full font-bold uppercase ${statusInfo.class}`}>
+                                {statusInfo.label}
+                            </span>
+                            <span className="font-mono font-bold text-blue-600">{progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                            <div className="bg-blue-500 h-full transition-all" style={{ width: `${progress}%` }} />
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <CalendarIcon className="w-3.5 h-3.5" /> {formatDateDisplay(becario.start_date)} - {formatDateDisplay(becario.end_date)}
+                        </div>
+                    </div>
+                );
+            }
+        }
+    ];
+
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout breadcrumbs={[{ title: 'Becarios', href: '/becarios' }]}>
             <Head title="Gestión de Becarios" />
 
             <div className="p-4 md:p-6">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                     <h2 className="text-2xl font-bold text-gray-800">Listado de Becarios</h2>
-                    
-                    <div className="flex w-full md:w-auto gap-3">
-                        <a 
-                            href={getExportUrl()}
-                            className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 text-sm font-medium shadow-sm transition flex items-center gap-2 cursor-pointer"
-                        >
-                            <FileDown className="w-4 h-4" />
-                            <span className="hidden sm:inline">Exportar</span>
+                    <div className="flex gap-3">
+                        <a href={`/becarios/export?${new URLSearchParams(params as any)}`} className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 text-sm font-medium flex items-center gap-2">
+                            <FileDown className="w-4 h-4" /> Exportar
                         </a>
-
                         {isAdmin && (
-                            <Link href="/becarios/create" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition flex items-center gap-2 cursor-pointer">
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden sm:inline">Nuevo Becario</span>
+                            <Link href="/becarios/create" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium flex items-center gap-2">
+                                <Plus className="w-4 h-4" /> Nuevo Becario
                             </Link>
                         )}
                     </div>
                 </div>
 
                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                        
-                        <div className="lg:col-span-2 relative">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div className="md:col-span-6">
                             <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Búsqueda</label>
-                            <Search className="absolute left-3 top-9 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <input 
-                                type="text"
-                                name="search"
-                                placeholder="Nombre, DNI, email..." 
+                            <SearchInput 
                                 value={params.search}
-                                onChange={handleFilterChange}
-                                className="border border-gray-300 rounded-lg pl-10 pr-4 py-2 text-sm w-full focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                onChange={(val) => handleFilterChange('search', val)}
+                                placeholder="Nombre, DNI, email..."
                             />
                         </div>
-
-                        <div>
+                        <div className="md:col-span-3">
                             <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Estado</label>
                             <select 
-                                name="status"
-                                value={params.status}
-                                onChange={handleFilterChange}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer"
+                                name="status" 
+                                value={params.status} 
+                                onChange={(e) => handleFilterChange('status', e.target.value)} 
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none h-[38px] cursor-pointer"
                             >
-                                <option value="">Todos los estados</option>
+                                <option value="">Todos</option>
                                 <option value="active">Activo</option>
                                 <option value="finished">Finalizado</option>
-                                <option value="terminated">Baja</option>
+                                <option value="abandoned">Abandonado</option>
                             </select>
                         </div>
-
-                        <div>
+                        <div className="md:col-span-3">
                             <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Centro</label>
                             <select 
-                                name="center_id"
-                                value={params.center_id}
-                                onChange={handleFilterChange}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer"
+                                name="center_id" 
+                                value={params.center_id} 
+                                onChange={(e) => handleFilterChange('center_id', e.target.value)} 
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none h-[38px] cursor-pointer"
                             >
-                                <option value="" className="cursor-pointer">Todos los centros</option>
-                                {centers?.map(center => (
-                                    <option key={center.id} value={center.id}>{center.name}</option>
-                                ))}
+                                <option value="">Todos los centros</option>
+                                {centers?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                         </div>
+                    </div>
 
-                        <div className="flex items-end">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-4 border-t border-gray-100">
+                        {/* FILTROS CON CALENDARIO NUEVO */}
+                        <FilterDatePicker name="start_from" value={params.start_from} label="Inicio (Desde)" />
+                        <FilterDatePicker name="start_to" value={params.start_to} label="Inicio (Hasta)" />
+                        <FilterDatePicker name="end_from" value={params.end_from} label="Fin (Desde)" />
+                        <FilterDatePicker name="end_to" value={params.end_to} label="Fin (Hasta)" />
+
+                        <div className="flex flex-col">
+                            <label className="text-[10px] font-bold uppercase mb-1 block opacity-0 select-none">Espaciador</label>
                             <button 
-                                onClick={resetFilters}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-red-600 transition-colors border border-dashed border-gray-300 rounded-lg hover:border-red-200 cursor-pointer"
+                                onClick={resetFilters} 
+                                className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-sm text-gray-500 hover:text-red-600 border border-dashed border-gray-300 rounded-lg hover:border-red-200 transition-colors cursor-pointer h-[38px]"
                             >
-                                <X className="w-4 h-4" /> Limpiar
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center gap-6 pt-4 border-t border-gray-50">
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase">Desde:</span>
-                            <input 
-                                type="date"
-                                name="from_date"
-                                value={params.from_date}
-                                onChange={handleFilterChange}
-                                className="cursor-pointer border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                            />
-                        </div>
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase">Hasta:</span>
-                            <input 
-                                type="date"
-                                name="to_date"
-                                value={params.to_date}
-                                onChange={handleFilterChange}
-                                className="cursor-pointer border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-gray-600 table-auto border-collapse">
-                            <thead className="bg-gray-50 border-b text-[11px] uppercase tracking-wider font-bold text-gray-500">
-                                <tr>
-                                    <th className="px-4 py-4 min-w-[220px]">Becario / Datos Personales</th>
-                                    <th className="px-4 py-4 min-w-[220px]">Centro y Tutor</th>
-                                    <th className="px-4 py-4 min-w-[220px]">Estado y Progreso</th>
-                                    <th className="px-4 py-4 w-[140px]"></th>        
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {interns.data.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500 italic">
-                                            <div className="flex flex-col items-center gap-2">
-                                                <AlertCircle className="w-6 h-6 text-gray-300" />
-                                                <span>No se encontraron becarios con estos filtros.</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                                {interns.data.map((becario) => {
-                                    const statusInfo = statusMap[becario.status] || { 
-                                        label: becario.status, 
-                                        class: 'bg-gray-100 text-gray-600' 
-                                    };
-
-                                    return (
-                                        <tr key={becario.id} className="hover:bg-blue-50/10 transition-colors">
-                                            <td className="px-4 py-4 align-middle">
-                                                <div className="flex items-start gap-3">
-                                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0 mt-1">
-                                                        <User className="w-5 h-5" />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <div className="font-bold text-gray-900 text-base leading-tight">
-                                                            <Link 
-                                                                href={`/becarios/${becario.id}`} 
-                                                                className="hover:text-blue-600 transition-colors cursor-pointer"
-                                                            >
-                                                                {becario.name} {becario.last_name}
-                                                            </Link>
-                                                        </div>
-                                                        <div className="flex flex-col gap-1">
-                                                            <div className="text-[12px] text-gray-500 font-mono flex items-center gap-1">
-                                                                <span className="font-semibold text-gray-400">DNI:</span> {becario.dni}
-                                                            </div>
-                                                            <div className="text-[11px] text-gray-400 flex flex-col gap-1">
-                                                                <div className="flex items-center gap-1.5 text-gray-500 font-medium">
-                                                                    <Phone className="w-3 h-3 flex-shrink-0 text-gray-400" /> 
-                                                                    {becario.phone || 'Sin teléfono'}
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-start gap-1 max-w-[200px] mt-1"> 
-                                                                <Mail className="w-3 h-3 text-gray-400 mt-1 flex-shrink-0" />
-                                                                <a 
-                                                                    href={`mailto:${becario.email}`} 
-                                                                    className="text-[12px] text-gray-500 hover:text-blue-600 hover:underline break-all transition-colors cursor-pointer"
-                                                                >
-                                                                    {becario.email}
-                                                                </a> 
-                                                                <button
-                                                                    onClick={() => copyToClipboard(becario.email, becario.id)}
-                                                                    className="ml-1 p-0.5 text-gray-400 hover:text-blue-600 transition-colors cursor-pointer flex-shrink-0"
-                                                                    title="Copiar email"
-                                                                >
-                                                                    {copiedEmail === becario.id ? (
-                                                                        <Check className="w-3 h-3 text-green-500" />
-                                                                    ) : (
-                                                                        <Copy className="w-3 h-3" />
-                                                                    )}
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-
-                                            <td className="px-4 py-4 align-middle">
-                                                <div className="flex items-start gap-1.5 text-gray-900 font-semibold">
-                                                    <Building2 className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                                                    {becario.center ? (
-                                                        <Link href={`/centros/${becario.center.id}`} className="hover:text-blue-600 transition-colors cursor-pointer">
-                                                            {becario.center.name}
-                                                        </Link>
-                                                    ) : <span className="text-gray-400 italic font-normal">Sin centro</span>}
-                                                </div>
-                                                <div className="text-[11px] text-gray-500 ml-5.5 mt-1 flex items-center gap-1.5 font-medium">
-                                                    <User className="w-3.5 h-3.5 text-gray-400" />
-                                                    <span>{becario.academic_tutor || 'Sin tutor'}</span>
-                                                </div>
-                                                <div className="text-[11px] uppercase font-medium text-gray-500 ml-5.5 mt-1 flex items-center gap-1.5">
-                                                    <GraduationCap className="w-3.5 h-3.5 text-gray-400" />
-                                                    {becario.academic_cycle || 'N/A'}
-                                                </div>
-                                            </td>
-
-                                            <td className="px-4 py-4 align-middle">
-                                                <div className="mb-2 flex justify-between items-end text-[11px]">
-                                                    {/* USO DE LA VARIABLE statusInfo */}
-                                                    <span className={`px-2 py-0.5 rounded-full font-bold uppercase ${statusInfo.class}`}>
-                                                        {statusInfo.label}
-                                                    </span>
-                                                    <span className="font-mono font-bold text-blue-600">
-                                                        {Math.round((becario.completed_hours / (becario.total_hours || 400)) * 100)}%
-                                                    </span>
-                                                </div>
-                                                
-                                                <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                                    <div 
-                                                        className="bg-blue-500 h-full rounded-full transition-all duration-500"
-                                                        style={{ width: `${(becario.completed_hours / (becario.total_hours || 400)) * 100}%` }}
-                                                    ></div>
-                                                </div>
-
-                                                <div className="mt-2 flex flex-col gap-1 text-[10px] text-gray-400 font-medium">
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="flex items-center gap-1 text-gray-500 font-medium">
-                                                            <Calendar className="w-3 h-3" />
-                                                            {formatDate(becario.start_date)} - {formatDate(becario.end_date)}
-                                                        </span>
-                                                    </div>
-                                                    <div className="italic">
-                                                        {becario.completed_hours} de {becario.total_hours}h totales
-                                                    </div>
-                                                </div>
-                                            </td>
-
-                                            <td className="px-4 py-4 align-middle text-right">
-                                                <div className="flex justify-end gap-1.5">
-                                                    <Link 
-                                                        href={`/becarios/${becario.id}`}
-                                                        className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg transition-all border border-gray-200 cursor-pointer"
-                                                        title="Ver Perfil"
-                                                    >
-                                                        <User className="w-4 h-4" /> 
-                                                    </Link>
-                                                    {isAdmin && (
-                                                        <>
-                                                            <Link href={`/becarios/${becario.id}/edit`} className="p-2 bg-blue-600 text-white rounded-lg cursor-pointer">
-                                                                <Edit2 className="w-4 h-4" />
-                                                            </Link>
-                                                            <button onClick={() => openDeleteModal(becario)} className="p-2 bg-red-600 text-white rounded-lg cursor-pointer">
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-                    <p>
-                        Mostrando <span className="font-semibold text-gray-800">{interns.data.length}</span> de <span className="font-semibold text-gray-800">{interns.total}</span> becarios
-                    </p>
-                    <div className="inline-flex shadow-sm rounded-lg overflow-hidden border border-gray-300">
-                        <button 
-                            disabled={!interns.prev_page_url}
-                            onClick={() => router.get(interns.prev_page_url!, params, { preserveState: true })}
-                            className="px-4 py-2 bg-white hover:bg-gray-50 disabled:opacity-50 transition border-r font-medium text-gray-700 cursor-pointer disabled:cursor-not-allowed"
-                        >
-                            Anterior
-                        </button>
-                        <button 
-                            disabled={!interns.next_page_url}
-                            onClick={() => router.get(interns.next_page_url!, params, { preserveState: true })}
-                            className="px-4 py-2 bg-white hover:bg-gray-50 disabled:opacity-50 transition font-medium text-gray-700 cursor-pointer disabled:cursor-not-allowed"
-                        >
-                            Siguiente
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {isDeleting && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 text-center">
-                            <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-100 mb-4">
-                                <AlertTriangle className="h-7 w-7 text-red-600" />
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900">¿Eliminar becario?</h3>
-                            <p className="text-sm text-gray-500 mt-2">
-                                Estás a punto de eliminar a <strong>{internToDelete?.name} {internToDelete?.last_name}</strong>. 
-                                Esta acción no se puede deshacer.
-                            </p>
-                        </div>
-                        <div className="bg-gray-50 px-6 py-4 flex gap-3">
-                            <button 
-                                onClick={() => setIsDeleting(false)}
-                                className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-colors cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button 
-                                onClick={confirmDelete}
-                                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200 cursor-pointer"
-                            >
-                                Sí, eliminar
+                                <X className="w-4 h-4" /> 
+                                <span>Limpiar</span>
                             </button>
                         </div>
                     </div>
                 </div>
-            )}
+
+                <DataTable 
+                    columns={columns}
+                    data={interns.data}
+                    pagination={interns}
+                    params={params}
+                    emptyMessage={
+                        <div className="flex flex-col items-center gap-2 py-6">
+                            <AlertCircle className="w-6 h-6 text-gray-300" />
+                            <span>No se encontraron becarios con estos filtros.</span>
+                        </div>
+                    }
+                    actions={(becario) => (
+                        <div className="flex justify-end gap-1.5">
+                            <Link href={`/becarios/${becario.id}`} className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg transition-all" title="Ver">
+                                <User className="w-4 h-4" /> 
+                            </Link>
+                            {isAdmin && (
+                                <>
+                                    <Link href={`/becarios/${becario.id}/edit`} className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg">
+                                        <Edit2 className="w-4 h-4" />
+                                    </Link>
+                                    <button onClick={() => {
+                                        setInternToDelete(becario);
+                                        setIsDeleting(true);
+                                    }} className="p-2 bg-red-600 text-white hover:bg-red-700 rounded-lg cursor-pointer">
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    )}
+                />
+            </div>           
+
+            <DeleteConfirmModal 
+                isOpen={isDeleting}
+                onClose={() => setIsDeleting(false)}
+                onConfirm={() => {
+                    if (internToDelete) {
+                        router.delete(`/becarios/${internToDelete.id}`, {
+                            onSuccess: () => setIsDeleting(false),
+                        });
+                    }
+                }}
+                title="¿Eliminar becario?"
+                itemName={`${internToDelete?.name} ${internToDelete?.last_name}`}
+            />
         </AppLayout>
     );
 }
