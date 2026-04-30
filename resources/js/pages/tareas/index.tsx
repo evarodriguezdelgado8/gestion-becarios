@@ -1,7 +1,3 @@
-import { Head, router, usePage } from '@inertiajs/react';
-import { Plus, Trash2, LayoutDashboard, List } from 'lucide-react';
-import { useReducer, useState, useEffect, useMemo } from 'react';
-import { toast } from 'sonner';
 import {
     DndContext,
     closestCenter,
@@ -13,6 +9,10 @@ import {
     DragOverlay,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Plus, Trash2, LayoutDashboard, List } from 'lucide-react';
+import { useReducer, useState, useEffect, useMemo } from 'react';
+import { toast } from 'sonner';
 
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { DatePicker } from "@/components/ui/date-picker";

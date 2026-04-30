@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react'; // Asegúrate de que este Form es el wrapper de tu starter kit
 import { useRef, useEffect } from 'react';
 import { toast } from 'sonner'; // Importamos toast
 import PasswordController from '@/actions/App/Http/Controllers/Settings/PasswordController';
@@ -11,7 +12,6 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { edit } from '@/routes/user-password';
 import type { BreadcrumbItem } from '@/types';
-import { Form } from '@inertiajs/react'; // Asegúrate de que este Form es el wrapper de tu starter kit
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

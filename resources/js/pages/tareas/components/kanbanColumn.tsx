@@ -1,9 +1,9 @@
-import { Link } from '@inertiajs/react';
-import { Edit, Trash2, User, MessageSquare, Calendar, Plus } from 'lucide-react';
-import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Link } from '@inertiajs/react';
+import { Edit, Trash2, User, MessageSquare, Calendar, Plus } from 'lucide-react';
+import React from 'react';
 import { getStatusConfig, STATUS_LABELS, PRIORITY_LABELS, getPriorityStyle, getDueDateStyle } from '../taskUtils';
 
 function TaskCard({ task, isBecario, onEdit, onDelete, columnId }: any) {

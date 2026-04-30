@@ -1,6 +1,8 @@
 import { Head, usePage, useForm } from '@inertiajs/react';
+import { Upload, ImageIcon } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner'; 
+import ImageCropper from '@/components/common/ImageCropper';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -8,9 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
-import ImageCropper from '@/components/common/ImageCropper';
 import type { BreadcrumbItem } from '@/types';
-import { Upload, ImageIcon } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Configuración de perfil', href: '/settings/profile' },

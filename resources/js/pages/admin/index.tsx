@@ -1,8 +1,8 @@
-import AppLayout from '@/layouts/app-layout';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Head, router } from '@inertiajs/react';
-import { toast } from 'sonner';
 import React from 'react';
+import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
+import AppLayout from '@/layouts/app-layout';
 
 const permissionTranslations: Record<string, string> = {
     'view centers': 'Visualizar centros educativos',
