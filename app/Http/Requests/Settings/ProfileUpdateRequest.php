@@ -17,6 +17,10 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->profileRules($this->user()->id);
+        $rules = $this->profileRules($this->user()->id);
+
+        $rules['photo'] = ['nullable', 'image', 'max:2048'];
+
+        return $rules;
     }
 }

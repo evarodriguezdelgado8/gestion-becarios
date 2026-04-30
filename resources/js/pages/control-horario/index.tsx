@@ -13,7 +13,7 @@ export default function ControlHorario() {
                     <p className="text-muted-foreground">Control de horas de entrada, salida y permanencia.</p>
                 </div>
                 <div className="min-h-[400px] rounded-xl border border-dashed flex items-center justify-center bg-muted/50">
-                    <p className="text-sm text-muted-foreground italic">El sistema de fichaje se implementará en la Fase 4.</p>
+                    <p className="text-sm text-muted-foreground italic">El sistema de fichaje se implementará en la Fase 6.</p>
                 </div>
             </div>
         </AppLayout>

@@ -1,5 +1,13 @@
-import { Link, usePage } from '@inertiajs/react'; // Importamos usePage
-import { LayoutGrid, School, Users, CheckSquare, Clock, GraduationCap } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { 
+    LayoutGrid, 
+    School, 
+    Users, 
+    CheckSquare, 
+    Clock, 
+    GraduationCap,
+    ShieldCheck // Nuevo icono para permisos
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -13,58 +21,75 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import {dashboard} from '@/routes';
+import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-const footerNavItems: NavItem[] = [
-    
-];
+// Definimos un tipo extendido para incluir los permisos opcionales
+interface SidebarNavItem extends NavItem {
+    permission?: string;
+    role?: string; // Añadimos soporte para filtrar por rol directamente si es necesario
+}
+
+const footerNavItems: SidebarNavItem[] = [];
 
 export function AppSidebar() {
     const { auth } = usePage().props as any;
-    const roles = auth.user?.roles || [];
+    const userPermissions = auth.user?.permissions || [];
+    const userRoles = auth.user?.roles || [];
 
-    const allNavItems: NavItem[] = [
+    const allNavItems: SidebarNavItem[] = [
         {
             title: 'Dashboard',
-            href:'/dashboard',
+            href: '/dashboard',
             icon: LayoutGrid,
         },
         {
             title: 'Centros Educativos',
-            href: '/centros', 
+            href: '/centros',
             icon: School,
-            roles: ['admin', 'tutor'], 
+            permission: 'view centers', 
         },
         {
             title: 'Gestión de Becarios',
             href: '/becarios',
             icon: Users,
-            roles: ['admin', 'tutor'],
+            permission: 'view interns',
         },
         {
             title: 'Prácticas y Tareas',
             href: '/tareas',
             icon: CheckSquare,
-            roles: ['admin','tutor', 'intern'], 
+            permission: 'view own tasks',
         },
         {
             title: 'Control Horario',
             href: '/control-horario',
             icon: Clock,
-            roles: ['admin' ,'tutor', 'intern'],
+            permission: 'view own tasks',
         },
         {
             title: 'Evaluación y Notas',
             href: '/evaluacion',
             icon: GraduationCap,
-            roles: ['admin','tutor', 'intern'],
+            permission: 'evaluate progress',
+        },
+        // --- SECCIÓN DE ADMINISTRACIÓN ---
+        {
+            title: 'Roles y Permisos',
+            href: '/admin',
+            icon: ShieldCheck,
+            role: 'admin',
         }
     ];
 
-    const filteredNavItems = allNavItems.filter(item => {
-        if (!item.roles) return true;
-        return item.roles.some(role => roles.includes(role));
+    const filteredNavItems = allNavItems.filter((item) => {
+        // 1. Si tiene restricción de rol (como la matriz de permisos)
+        if (item.role && !userRoles.includes(item.role)) return false;
+        
+        // 2. Si tiene restricción de permiso
+        if (item.permission && !userPermissions.includes(item.permission)) return false;
+        
+        return true;
     });
 
     return (

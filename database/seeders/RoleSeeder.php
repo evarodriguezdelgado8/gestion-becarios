@@ -11,10 +11,10 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
-            'manage centers', 
-            'manage interns',
-
+            'manage centers',
             'view centers',
+
+            'manage interns',            
             'view interns',
             
             'create tasks',
@@ -37,11 +37,7 @@ class RoleSeeder extends Seeder
         $tutor = Role::firstOrCreate(['name' => 'tutor']);
         $intern = Role::firstOrCreate(['name' => 'intern']);
 
-        $admin->syncPermissions([
-            'manage centers',
-            'manage interns',
-            'view own tasks',
-        ]);
+        $admin->syncPermissions(Permission::all());
 
         $tutor->syncPermissions([
             'view centers',

@@ -62,7 +62,7 @@ class TaskController extends Controller
                 $cyclesLower = array_map('strtolower', $cyclesArray);
 
                 $query->whereHas('intern', function ($q) use ($cyclesLower) {
-                    $q->whereIn(\DB::raw('LOWER(academic_cycle)'), $cyclesLower);
+                    $q->whereIn(DB::raw('LOWER(academic_cycle)'), $cyclesLower);
                 });
             })
 
