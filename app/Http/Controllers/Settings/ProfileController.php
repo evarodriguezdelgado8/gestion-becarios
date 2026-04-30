@@ -48,7 +48,7 @@ class ProfileController extends Controller
                 ->toMediaCollection('profile_photo');
         }
 
-        return back();
+        return redirect()->route('profile.edit');
     }
 
     /**
