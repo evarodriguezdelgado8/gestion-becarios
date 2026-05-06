@@ -4,6 +4,8 @@ use App\Http\Controllers\CenterController;
 use App\Http\Controllers\InternController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TimeRegistryController;
+use App\Http\Controllers\ScheduleController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -30,7 +32,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // 2. Después las rutas de VISUALIZACIÓN
-    // Usamos 'permission' de Spatie para permitir el operador '|' (OR)
     Route::middleware(['permission:view centers|manage centers'])->group(function () {
         Route::get('/centros', [CenterController::class, 'index'])->name('centros.index');
         Route::get('/centros/{center}', [CenterController::class, 'show'])->name('centros.show');
@@ -38,15 +39,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // --- MÓDULO: BECARIOS (INTERNS) ---
 
-    // 1. Gestión (Resource incluye el orden correcto internamente, pero el resto no)
-    Route::middleware(['can:manage interns'])->group(function () {
+    // 1. Acciones disponibles para admin y tutor
+    Route::middleware(['permission:view interns|manage interns'])->group(function () {
         Route::get('becarios/export', [InternController::class, 'export'])->name('becarios.export');
+        
+        Route::get('/control-horario/configurar/{intern}', [ScheduleController::class, 'edit'])->name('control-horario.config');
+        Route::post('/control-horario/configurar/{intern}', [ScheduleController::class, 'store'])->name('control-horario.save-config');
+    
+        Route::post('/control-horario/manual', [TimeRegistryController::class, 'storeManual'])->name('time.manual');
+        Route::put('/control-horario/{timeRegistry}', [TimeRegistryController::class, 'updateManual'])->name('time.update-manual');
+        Route::delete('/control-horario/{timeRegistry}', [TimeRegistryController::class, 'destroy'])->name('time.destroy');
+        
+        Route::post('/control-horario/bulk-schedule', [TimeRegistryController::class, 'bulkSchedule'])->name('time.bulk-schedule');
+    });
+
+    // 2. Gestión exclusiva de admin
+    Route::middleware(['can:manage interns'])->group(function () {
         Route::resource('becarios', InternController::class)
             ->parameters(['becarios' => 'intern'])
             ->except(['index', 'show']);
     });
 
-    // 2. Visualización ({intern} después de export/create)
+    // 3. Visualización ({intern} después de export/create)
     Route::middleware(['permission:view interns|manage interns'])->group(function () {
         Route::get('/becarios', [InternController::class, 'index'])->name('becarios.index');
         Route::get('/becarios/{intern}', [InternController::class, 'show'])->name('becarios.show');
@@ -58,9 +72,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/tareas/{task}', [TaskController::class, 'show'])->name('tareas.show');
         Route::post('/tareas/{task}/comments', [TaskController::class, 'storeComment'])->name('tareas.comments.store');
         Route::post('/tareas/{task}/deliveries', [TaskController::class, 'storeDelivery'])->name('tareas.deliveries.store');
-        Route::inertia('control-horario', 'control-horario/index')->name('control-horario');
     });
-
+    
     Route::middleware(['can:update task status'])->group(function () {
         Route::patch('/tareas/{task}/status', [TaskController::class, 'updateStatus'])->name('tareas.updateStatus');
     });
@@ -69,6 +82,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/tareas', [TaskController::class, 'store'])->name('tareas.store');
         Route::match(['post', 'put'], '/tareas/{task}', [TaskController::class, 'update'])->name('tareas.update');
         Route::delete('/tareas/{task}', [TaskController::class, 'destroy'])->name('tareas.destroy');
+    });
+
+    // --- MÓDULO: CONTROL HORARIO ---
+    Route::middleware(['auth', 'can:view own tasks'])->group(function () {
+        
+        Route::get('/control-horario', [TimeRegistryController::class, 'index'])->name('control-horario');
+        Route::post('/control-horario/check-in', [TimeRegistryController::class, 'store'])->name('control-horario.check-in');
+        Route::patch('/control-horario/{timeRegistry}/check-out', [TimeRegistryController::class, 'update'])->name('control-horario.check-out');
+
     });
 
     // --- MÓDULO: EVALUACIÓN ---

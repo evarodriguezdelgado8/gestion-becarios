@@ -10,6 +10,9 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use App\Models\TimeRegistry;
+use App\Models\Schedule;
+use App\Models\Absence;
 
 class User extends Authenticatable implements MustVerifyEmail, HasMedia
 {
@@ -81,4 +84,26 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+
+
+    // Relación con los horarios semanales
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    // Relación con los fichajes diarios
+    public function timeRegistries()
+    {
+        return $this->hasMany(TimeRegistry::class);
+    }
+
+    // Relación con las ausencias
+    public function absences()
+    {
+        return $this->hasMany(Absence::class);
+    }
+
+
+
 }
