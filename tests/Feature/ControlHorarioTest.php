@@ -1,10 +1,13 @@
 <?php
 
+use App\Models\Absence;
 use App\Models\Center;
 use App\Models\Intern;
 use App\Models\TimeRegistry;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Support\Carbon;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('manual bulk registry rolls back when one intern has an overlapping registry', function () {
     $this->seed(RoleSeeder::class);
@@ -88,4 +91,52 @@ test('manual registry accepts punctual status as a normal registry alias', funct
 
     expect(TimeRegistry::query()->where('user_id', $internUser->id)->sole()->status)
         ->toBe('normal');
+});
+
+test('approved absences count as reviewed today in the manager dashboard', function () {
+    Carbon::setTestNow('2026-05-13 10:00:00');
+
+    try {
+        $this->seed(RoleSeeder::class);
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $center = Center::factory()->create();
+        $internUser = User::factory()->create();
+        Intern::factory()->create([
+            'user_id' => $internUser->id,
+            'center_id' => $center->id,
+        ]);
+
+        $absence = Absence::create([
+            'user_id' => $internUser->id,
+            'date' => '2026-05-20',
+            'reason' => 'Cita médica',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->put(route('absences.update', $absence), [
+            'status' => 'approved',
+            'tutor_comment' => 'Aprobada',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+
+        $absence->refresh();
+
+        expect($absence->status)->toBe('approved')
+            ->and($absence->reviewed_at?->toDateString())->toBe('2026-05-13');
+
+        $this->actingAs($admin)
+            ->get(route('control-horario'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('control-horario/index')
+                ->has('managerAbsences', 1)
+                ->where('managerAbsences.0.id', $absence->id)
+                ->where('managerAbsences.0.reviewed_at', '2026-05-13 10:00:00')
+            );
+    } finally {
+        Carbon::setTestNow();
+    }
 });

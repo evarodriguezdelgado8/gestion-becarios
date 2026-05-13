@@ -5,7 +5,6 @@ use App\Http\Controllers\InternController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TimeRegistryController;
-use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\AbsenceController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -43,9 +42,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // 1. Acciones disponibles para admin y tutor
     Route::middleware(['permission:view interns|manage interns'])->group(function () {
         Route::get('becarios/export', [InternController::class, 'export'])->name('becarios.export');
-        
-        Route::get('/control-horario/configurar/{intern}', [ScheduleController::class, 'edit'])->name('control-horario.config');
-        Route::post('/control-horario/configurar/{intern}', [ScheduleController::class, 'store'])->name('control-horario.save-config');
     
         Route::post('/control-horario/manual', [TimeRegistryController::class, 'storeManual'])->name('time.manual');
         Route::put('/control-horario/{timeRegistry}', [TimeRegistryController::class, 'updateManual'])->name('time.update-manual');

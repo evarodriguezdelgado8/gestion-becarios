@@ -133,6 +133,8 @@ class TimeRegistryController extends Controller
                             'reason' => $absence->reason,
                             'status' => $absence->status,
                             'tutor_comment' => $absence->tutor_comment,
+                            'reviewed_at' => $absence->reviewed_at?->toDateTimeString(),
+                            'updated_at' => $absence->updated_at?->toDateTimeString(),
                             'attachment_url' => $this->publicStorageUrl($absence->attachment_path),
                         ];
                     })
@@ -191,7 +193,13 @@ class TimeRegistryController extends Controller
                     ->whereIn('user_id', $internIndex->keys())
                     ->where(function ($query) use ($today) {
                         $query->where('status', 'pending')
-                            ->orWhereDate('date', $today);
+                            ->orWhereDate('date', $today)
+                            ->orWhereDate('reviewed_at', $today)
+                            ->orWhere(function ($query) use ($today) {
+                                $query->whereNull('reviewed_at')
+                                    ->whereIn('status', ['approved', 'rejected'])
+                                    ->whereDate('updated_at', $today);
+                            });
                     })
                     ->orderByDesc('date')
                     ->limit(80)
@@ -209,6 +217,8 @@ class TimeRegistryController extends Controller
                             'reason' => $absence->reason,
                             'status' => $absence->status,
                             'tutor_comment' => $absence->tutor_comment,
+                            'reviewed_at' => $absence->reviewed_at?->toDateTimeString(),
+                            'updated_at' => $absence->updated_at?->toDateTimeString(),
                             'attachment_url' => $this->publicStorageUrl($absence->attachment_path),
                         ];
                     })

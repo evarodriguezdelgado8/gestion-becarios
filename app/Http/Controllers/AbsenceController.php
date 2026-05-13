@@ -68,6 +68,7 @@ class AbsenceController extends Controller
         $absence->update([
             'status' => $request->status,
             'tutor_comment' => $request->tutor_comment,
+            'reviewed_at' => now(),
         ]);
 
         return back()->with('success', 'Ausencia actualizada correctamente.');
