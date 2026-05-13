@@ -40,9 +40,9 @@ interface Props {
 }
 
 const statusMap: Record<string, { label: string; class: string }> = {
-    'active': { label: 'Activo', class: 'bg-green-100 text-green-700' },
-    'finished': { label: 'Finalizado', class: 'bg-blue-100 text-blue-700' },
-    'abandoned': { label: 'Abandonado', class: 'bg-red-100 text-red-700' },
+    'active': { label: 'Activo', class: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+    'finished': { label: 'Finalizado', class: 'bg-blue-50 text-blue-700 border-blue-100' },
+    'abandoned': { label: 'Abandonado', class: 'bg-rose-50 text-rose-700 border-rose-100' },
 };
 
 const FilterDatePicker = ({
@@ -57,13 +57,13 @@ const FilterDatePicker = ({
     onChange: (name: string, value: string) => void;
 }) => (
     <div>
-        <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">{label}</label>
+        <label className="mb-1 block text-[10px] font-black uppercase text-slate-400">{label}</label>
         <Popover>
             <PopoverTrigger asChild>
                 <Button
                     variant={"outline"}
                     className={cn(
-                        "w-full justify-start text-left font-normal h-[38px] border-gray-300 rounded-lg text-sm",
+                        "h-[38px] w-full justify-start rounded-xl border-slate-200 text-left text-sm font-normal",
                         !value && "text-gray-900"
                     )}
                 >
@@ -170,30 +170,30 @@ export default function Index({ interns, filters, centers, flash }: Props) {
             header: 'Becario / Datos Personales',
             className: 'min-w-[220px]',
             render: (becario) => (
-                <div className="flex items-start gap-3 py-1">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold flex-shrink-0 mt-1">
-                        <User className="w-5 h-5" />
+                <div className="flex items-start gap-3">
+                    <div className="mt-1 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-50 font-bold text-blue-600 ring-1 ring-blue-100">
+                        <User className="h-5 w-5" />
                     </div>
                     <div className="space-y-1">
-                        <Link href={`/becarios/${becario.id}`} className="font-bold text-gray-900 text-base hover:text-blue-600 transition-colors leading-tight">
+                        <Link href={`/becarios/${becario.id}`} className="text-base font-bold leading-tight text-slate-900 transition-colors hover:text-blue-600">
                             {becario.name} {becario.last_name}
                         </Link>
-                        <div className="text-[13px] text-gray-600 font-mono">
-                            <span className="font-semibold text-gray-400">DNI:</span> {becario.dni}
+                        <div className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-500">
+                            DNI: {becario.dni}
                         </div>
-                        <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                            <Phone className="w-3.5 h-3.5 text-gray-400" /> {becario.phone || 'N/A'}
+                        <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                            <Phone className="h-3.5 w-3.5 text-slate-400" /> {becario.phone || 'N/A'}
                         </div>
                         <div className="flex items-center gap-1">
-                            <Mail className="w-3.5 h-3.5 text-gray-400" />
-                            <span className="text-sm text-gray-600 truncate max-w-[140px]">{becario.email}</span>
+                            <Mail className="h-3.5 w-3.5 text-slate-400" />
+                            <span className="max-w-[160px] truncate text-sm font-medium text-slate-600">{becario.email}</span>
                             <button onClick={() => {
                                 navigator.clipboard.writeText(becario.email);
                                 setCopiedEmail(becario.id);
                                 toast.info('Copiado al portapapeles');
                                 setTimeout(() => setCopiedEmail(null), 2000);
-                            }} className="text-gray-400 hover:text-blue-600 p-1 cursor-pointer">
-                                {copiedEmail === becario.id ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                            }} className="cursor-pointer rounded-xl bg-slate-100 p-1 text-slate-400 hover:text-blue-600">
+                                {copiedEmail === becario.id ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                             </button>
                         </div>
                     </div>
@@ -204,20 +204,20 @@ export default function Index({ interns, filters, centers, flash }: Props) {
             header: 'Centro y Tutor',
             className: 'min-w-[220px]',
             render: (becario) => (
-                <div className="space-y-1 py-1">
-                    <div className="flex items-start gap-1.5 text-gray-900 font-bold text-base leading-tight">
-                        <Building2 className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                <div className="space-y-2">
+                    <div className="flex items-start gap-1.5 text-base font-bold leading-tight text-slate-900">
+                        <Building2 className="mt-1 h-4 w-4 flex-shrink-0 text-slate-400" />
                         {becario.center ? (
-                            <Link href={`/centros/${becario.center.id}`} className="hover:text-blue-600 transition-colors break-words">
+                            <Link href={`/centros/${becario.center.id}`} className="break-words transition-colors hover:text-blue-600">
                                 {becario.center.name}
                             </Link>
-                        ) : <span className="text-gray-400 italic font-normal text-sm">Sin centro</span>}
+                        ) : <span className="text-sm font-normal italic text-slate-400">Sin centro</span>}
                     </div>
-                    <div className="text-[13px] text-gray-700/70 flex items-center gap-1.5 ml-6 font-bold uppercase">
-                        <User className="w-3.5 h-3.5 text-gray-400" /> {becario.academic_tutor || 'Sin tutor'}
+                    <div className="ml-6 flex items-center gap-1.5 text-[12px] font-black uppercase text-slate-400">
+                        <User className="h-3.5 w-3.5 text-slate-400" /> {becario.academic_tutor || 'Sin tutor'}
                     </div>
-                    <div className="text-sm font-medium text-gray-600 flex items-center gap-1.5 ml-6">
-                        <GraduationCap className="w-4 h-4 text-gray-400" /> {becario.academic_cycle || 'N/A'}
+                    <div className="ml-6 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
+                        <GraduationCap className="h-4 w-4 text-slate-400" /> {becario.academic_cycle || 'N/A'}
                     </div>
                 </div>
             )
@@ -226,21 +226,21 @@ export default function Index({ interns, filters, centers, flash }: Props) {
             header: 'Estado y Progreso',
             className: 'min-w-[200px]',
             render: (becario) => {
-                const statusInfo = statusMap[becario.status] || { label: becario.status, class: 'bg-gray-100 text-gray-600' };
+                const statusInfo = statusMap[becario.status] || { label: becario.status, class: 'bg-slate-100 text-slate-600 border-slate-200' };
                 const progress = Math.round((becario.completed_hours / (becario.total_hours || 400)) * 100);
                 return (
-                    <div className="space-y-2 py-1">
-                        <div className="flex justify-between items-end text-[11px]">
-                            <span className={`px-2 py-0.5 rounded-full font-bold uppercase ${statusInfo.class}`}>
+                    <div className="space-y-3">
+                        <div className="flex items-end justify-between text-[11px]">
+                            <span className={`rounded-full border px-2.5 py-1 font-black uppercase ${statusInfo.class}`}>
                                 {statusInfo.label}
                             </span>
-                            <span className="font-mono font-bold text-blue-600">{progress}%</span>
+                            <span className="font-mono font-black text-blue-600">{progress}%</span>
                         </div>
-                        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                            <div className="bg-blue-500 h-full transition-all" style={{ width: `${progress}%` }} />
+                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                            <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${progress}%` }} />
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <CalendarIcon className="w-3.5 h-3.5" /> {formatDateDisplay(becario.start_date)} - {formatDateDisplay(becario.end_date)}
+                        <div className="flex items-center gap-1 text-xs font-semibold text-slate-500">
+                            <CalendarIcon className="h-3.5 w-3.5" /> {formatDateDisplay(becario.start_date)} - {formatDateDisplay(becario.end_date)}
                         </div>
                     </div>
                 );
@@ -252,25 +252,25 @@ export default function Index({ interns, filters, centers, flash }: Props) {
         <AppLayout breadcrumbs={[{ title: 'Becarios', href: '/becarios' }]}>
             <Head title="Gestión de Becarios" />
 
-            <div className="p-4 md:p-6">
-                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <div className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">
+                <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
                     <h2 className="text-2xl font-bold text-gray-800">Listado de Becarios</h2>
                     <div className="flex gap-3">
-                        <a href={`/becarios/export?${new URLSearchParams(params as any)}`} className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 text-sm font-medium flex items-center gap-2">
+                        <a href={`/becarios/export?${new URLSearchParams(params as any)}`} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700">
                             <FileDown className="w-4 h-4" /> Exportar
                         </a>
                         {isAdmin && (
-                            <Link href="/becarios/create" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium flex items-center gap-2">
+                            <Link href="/becarios/create" className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700">
                                 <Plus className="w-4 h-4" /> Nuevo Becario
                             </Link>
                         )}
                     </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 space-y-4">
+                <div className="space-y-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xl">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                         <div className="md:col-span-6">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Búsqueda</label>
+                            <label className="mb-1 block text-[10px] font-black uppercase text-slate-400">Búsqueda</label>
                             <SearchInput 
                                 value={params.search}
                                 onChange={(val) => handleFilterChange('search', val)}
@@ -278,12 +278,12 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                             />
                         </div>
                         <div className="md:col-span-3">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Estado</label>
+                            <label className="mb-1 block text-[10px] font-black uppercase text-slate-400">Estado</label>
                             <select 
                                 name="status" 
                                 value={params.status} 
                                 onChange={(e) => handleFilterChange('status', e.target.value)} 
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none h-[38px] cursor-pointer"
+                                className="h-[38px] w-full cursor-pointer rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="">Todos</option>
                                 <option value="active">Activo</option>
@@ -292,12 +292,12 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                             </select>
                         </div>
                         <div className="md:col-span-3">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Centro</label>
+                            <label className="mb-1 block text-[10px] font-black uppercase text-slate-400">Centro</label>
                             <select 
                                 name="center_id" 
                                 value={params.center_id} 
                                 onChange={(e) => handleFilterChange('center_id', e.target.value)} 
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none h-[38px] cursor-pointer"
+                                className="h-[38px] w-full cursor-pointer rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="">Todos los centros</option>
                                 {centers?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -305,7 +305,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-4 border-t border-gray-100">
+                    <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2 lg:grid-cols-5">
                         {/* FILTROS CON CALENDARIO NUEVO */}
                         <FilterDatePicker name="start_from" value={params.start_from} label="Inicio (Desde)" onChange={handleFilterChange} />
                         <FilterDatePicker name="start_to" value={params.start_to} label="Inicio (Hasta)" onChange={handleFilterChange} />
@@ -316,7 +316,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                             <label className="text-[10px] font-bold uppercase mb-1 block opacity-0 select-none">Espaciador</label>
                             <button 
                                 onClick={resetFilters} 
-                                className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-sm text-gray-500 hover:text-red-600 border border-dashed border-gray-300 rounded-lg hover:border-red-200 transition-colors cursor-pointer h-[38px]"
+                                className="flex h-[38px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-500 transition-colors hover:border-red-200 hover:text-red-600"
                             >
                                 <X className="w-4 h-4" /> 
                                 <span>Limpiar</span>
@@ -338,18 +338,18 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                     }
                     actions={(becario) => (
                         <div className="flex justify-end gap-1.5">
-                            <Link href={`/becarios/${becario.id}`} className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-lg transition-all" title="Ver">
+                            <Link href={`/becarios/${becario.id}`} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900" title="Ver">
                                 <User className="w-4 h-4" /> 
                             </Link>
                             {isAdmin && (
                                 <>
-                                    <Link href={`/becarios/${becario.id}/edit`} className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg">
+                                    <Link href={`/becarios/${becario.id}/edit`} className="rounded-xl bg-blue-600 p-2 text-white shadow-sm transition-all hover:bg-blue-700">
                                         <Edit2 className="w-4 h-4" />
                                     </Link>
                                     <button onClick={() => {
                                         setInternToDelete(becario);
                                         setIsDeleting(true);
-                                    }} className="p-2 bg-red-600 text-white hover:bg-red-700 rounded-lg cursor-pointer">
+                                    }} className="cursor-pointer rounded-xl bg-red-600 p-2 text-white shadow-sm transition-all hover:bg-red-700">
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </>

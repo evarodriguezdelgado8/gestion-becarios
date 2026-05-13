@@ -44,30 +44,30 @@ export default function DataTable<T>({
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xl">
             <div className="overflow-x-auto">
-                <Table>
-                    <TableHeader className="bg-gray-50 border-b text-[11px] uppercase tracking-wider font-bold text-gray-500">
-                        <TableRow>
+                <Table className="min-w-[900px]">
+                    <TableHeader className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                        <TableRow className="border-slate-100 hover:bg-transparent">
                             {columns.map((col, i) => (
-                                <TableHead key={i} className={col.className}>
+                                <TableHead key={i} className={`px-6 py-4 font-black text-slate-400 ${col.className ?? ''}`}>
                                     {col.header}
                                 </TableHead>
                             ))}
-                            {actions && <TableHead className="text-right w-[100px]"></TableHead>}
+                            {actions && <TableHead className="w-[128px] px-6 py-4 text-right font-black text-slate-400">Acciones</TableHead>}
                         </TableRow>
                     </TableHeader>
-                    <TableBody className="divide-y divide-gray-100">
+                    <TableBody className="divide-y divide-slate-100">
                         {data.length > 0 ? (
                             data.map((item, rowIndex) => (
-                                <TableRow key={rowIndex} className="hover:bg-blue-50/10 transition-colors">
+                                <TableRow key={rowIndex} className="border-slate-100 transition-colors hover:bg-slate-50/80">
                                     {columns.map((col, colIndex) => (
-                                        <TableCell key={colIndex} className="px-4 py-4 align-middle">
+                                        <TableCell key={colIndex} className="whitespace-normal px-6 py-5 align-top">
                                             {col.render(item)}
                                         </TableCell>
                                     ))}
                                     {actions && (
-                                        <TableCell className="px-4 py-4 text-right align-middle">
+                                        <TableCell className="whitespace-normal px-6 py-5 text-right align-top">
                                             {actions(item)}
                                         </TableCell>
                                     )}
@@ -77,7 +77,7 @@ export default function DataTable<T>({
                             <TableRow>
                                 <TableCell 
                                     colSpan={actions ? columns.length + 1 : columns.length} 
-                                    className="px-6 py-12 text-center text-gray-400 italic"
+                                    className="px-6 py-14 text-center text-slate-400"
                                 >
                                     {emptyMessage}
                                 </TableCell>
@@ -88,24 +88,24 @@ export default function DataTable<T>({
             </div>
             
             {pagination && (
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-sm text-gray-500">
-                        Mostrando <span className="font-semibold text-gray-800">{data.length}</span> de <span className="font-semibold text-gray-800">{pagination.total}</span> resultados
+                <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/70 px-6 py-4 md:flex-row">
+                    <p className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-500 shadow-sm ring-1 ring-slate-100">
+                        Mostrando <span className="font-black text-slate-900">{data.length}</span> de <span className="font-black text-slate-900">{pagination.total}</span> resultados
                     </p>
                     
                     {pagination.total > data.length && (
-                        <div className="inline-flex shadow-sm rounded-lg overflow-hidden border border-gray-300">
+                        <div className="inline-flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                             <button 
                                 disabled={!pagination.prev_page_url}
                                 onClick={() => handlePageChange(pagination.prev_page_url)}
-                                className="px-4 py-2 bg-white hover:bg-gray-50 disabled:opacity-50 transition border-r font-medium text-gray-700 cursor-pointer disabled:cursor-not-allowed text-sm"
+                                className="cursor-pointer border-r border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 Anterior
                             </button>
                             <button 
                                 disabled={!pagination.next_page_url}
                                 onClick={() => handlePageChange(pagination.next_page_url)}
-                                className="px-4 py-2 bg-white hover:bg-gray-50 disabled:opacity-50 transition font-medium text-gray-700 cursor-pointer disabled:cursor-not-allowed text-sm"
+                                className="cursor-pointer px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 Siguiente
                             </button>
