@@ -49,7 +49,7 @@ export default function ManagerPdfCard({
                     <input type="date" value={pdfDate} onChange={(e) => setPdfDate(e.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm" />
                 </div>
                 <Button type="button" disabled={!managerPdfInternId} onClick={() => handlePdfDownload(managerPdfInternId)} className="h-10 rounded-xl bg-slate-900 font-bold text-white hover:bg-slate-800">
-                    <Download className="mr-2 h-4 w-4" /> PDF
+                    <Download className="mr-2 h-4 w-4" /> Descargar PDF
                 </Button>
             </div>
         </Card>

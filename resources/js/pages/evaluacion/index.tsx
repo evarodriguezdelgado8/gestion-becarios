@@ -13,7 +13,7 @@ export default function Evaluacion() {
                     <p className="text-muted-foreground">Evaluación de competencias y resultados finales.</p>
                 </div>
                 <div className="min-h-[400px] rounded-xl border border-dashed flex items-center justify-center bg-muted/50">
-                    <p className="text-sm text-muted-foreground italic">El módulo de evaluación se implementará en la Fase 4.</p>
+                    <p className="text-sm text-muted-foreground italic">El módulo de evaluación se implementará en la Fase 7.</p>
                 </div>
             </div>
         </AppLayout>
