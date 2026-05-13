@@ -6,6 +6,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TimeRegistryController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\AbsenceController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -49,6 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/control-horario/manual', [TimeRegistryController::class, 'storeManual'])->name('time.manual');
         Route::put('/control-horario/{timeRegistry}', [TimeRegistryController::class, 'updateManual'])->name('time.update-manual');
         Route::delete('/control-horario/{timeRegistry}', [TimeRegistryController::class, 'destroy'])->name('time.destroy');
+        Route::put('/control-horario/ausencias/{absence}', [AbsenceController::class, 'update'])->name('absences.update');
         
         Route::post('/control-horario/bulk-schedule', [TimeRegistryController::class, 'bulkSchedule'])->name('time.bulk-schedule');
     });
@@ -88,8 +90,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['auth', 'can:view own tasks'])->group(function () {
         
         Route::get('/control-horario', [TimeRegistryController::class, 'index'])->name('control-horario');
+        Route::get('/control-horario/parte-horas/pdf', [TimeRegistryController::class, 'exportPdf'])->name('control-horario.pdf');
         Route::post('/control-horario/check-in', [TimeRegistryController::class, 'store'])->name('control-horario.check-in');
         Route::patch('/control-horario/{timeRegistry}/check-out', [TimeRegistryController::class, 'update'])->name('control-horario.check-out');
+        Route::post('/control-horario/ausencias', [AbsenceController::class, 'store'])->name('absences.store');
 
     });
 

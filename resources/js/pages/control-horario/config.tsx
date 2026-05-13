@@ -1,9 +1,10 @@
 import { Head, useForm, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import { ChevronLeft, Clock, CalendarDays } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ChevronLeft, Clock, CalendarDays } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
 // Importamos tus rutas manuales
 import { controlHorario } from '@/routes';
 

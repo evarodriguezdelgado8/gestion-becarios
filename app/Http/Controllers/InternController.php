@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
-use App\Models\Intern;
-use App\Models\Center;
-use Illuminate\Http\Request;
-use App\Http\Requests\InternRequest;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-
 use App\Exports\InternsExport;
+use App\Http\Requests\InternRequest;
+use App\Models\Center;
+use App\Models\Intern;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 
 class InternController extends Controller
@@ -25,21 +24,21 @@ class InternController extends Controller
             'interns' => Intern::query()
                 ->with('center:id,name')
                 ->when($request->input('search'), function ($query, $search) {
-                    $query->where(function($q) use ($search) {
+                    $query->where(function ($q) use ($search) {
                         $q->where('name', 'ilike', "%{$search}%")
-                        ->orWhere('last_name', 'ilike', "%{$search}%")
-                        ->orWhere('dni', 'ilike', "%{$search}%")
-                        ->orWhere('email', 'ilike', "%{$search}%");
+                            ->orWhere('last_name', 'ilike', "%{$search}%")
+                            ->orWhere('dni', 'ilike', "%{$search}%")
+                            ->orWhere('email', 'ilike', "%{$search}%");
                     });
                 })
-                ->when($request->input('center_id'), fn($q, $id) => $q->where('center_id', $id))
-                ->when($request->input('status'), fn($q, $st) => $q->where('status', $st))
-                
-                ->when($request->input('start_from'), fn($q, $date) => $q->whereDate('start_date', '>=', $date))
-                ->when($request->input('start_to'), fn($q, $date) => $q->whereDate('start_date', '<=', $date))
-                
-                ->when($request->input('end_from'), fn($q, $date) => $q->whereDate('end_date', '>=', $date))
-                ->when($request->input('end_to'), fn($q, $date) => $q->whereDate('end_date', '<=', $date))
+                ->when($request->input('center_id'), fn ($q, $id) => $q->where('center_id', $id))
+                ->when($request->input('status'), fn ($q, $st) => $q->where('status', $st))
+
+                ->when($request->input('start_from'), fn ($q, $date) => $q->whereDate('start_date', '>=', $date))
+                ->when($request->input('start_to'), fn ($q, $date) => $q->whereDate('start_date', '<=', $date))
+
+                ->when($request->input('end_from'), fn ($q, $date) => $q->whereDate('end_date', '>=', $date))
+                ->when($request->input('end_to'), fn ($q, $date) => $q->whereDate('end_date', '<=', $date))
 
                 ->latest()
                 ->paginate(10)
@@ -53,7 +52,7 @@ class InternController extends Controller
     public function export(Request $request)
     {
         $filters = $request->only(['search', 'center_id', 'status', 'start_from', 'start_to', 'end_from', 'end_to']);
-        $fileName = 'becarios_periodo_' . now()->format('d-m-Y_Hi') . '.xlsx';
+        $fileName = 'becarios_periodo_'.now()->format('d-m-Y_Hi').'.xlsx';
 
         return Excel::download(new InternsExport($filters), $fileName);
     }
@@ -64,7 +63,7 @@ class InternController extends Controller
     public function create()
     {
         return inertia('becarios/create', [
-            'centers' => Center::all(['id', 'name'])
+            'centers' => Center::all(['id', 'name']),
         ]);
     }
 
@@ -78,14 +77,14 @@ class InternController extends Controller
         // Ejecutamos la transacción
         DB::transaction(function () use ($validated, $request) {
             $user = User::create([
-                'name' => $validated['name'] . ' ' . ($validated['last_name'] ?? ''),
+                'name' => $validated['name'].' '.($validated['last_name'] ?? ''),
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['dni']),
-            ]);    
+            ]);
             $user->assignRole('intern');
-            
-            $intern = \App\Models\Intern::create(array_merge($validated, [
-                'user_id' => $user->id
+
+            $intern = Intern::create(array_merge($validated, [
+                'user_id' => $user->id,
             ]));
 
             if ($request->hasFile('document_dni')) {
@@ -108,13 +107,24 @@ class InternController extends Controller
      */
     public function show(Intern $intern)
     {
+        $intern->load(['center', 'user.schedules']);
+
         return Inertia::render('becarios/show', [
-            'intern' => $intern->load('center'),
+            'intern' => $intern,
+            'schedules' => $intern->user?->schedules
+                ?->sortBy('day_of_week')
+                ->values()
+                ->map(fn ($schedule) => [
+                    'id' => $schedule->id,
+                    'day_of_week' => $schedule->day_of_week,
+                    'start_time' => substr((string) $schedule->start_time, 0, 5),
+                    'end_time' => substr((string) $schedule->end_time, 0, 5),
+                ]) ?? [],
             'documents' => [
                 'dni' => $intern->getFirstMediaUrl('dni_scan'),
                 'convenio' => $intern->getFirstMediaUrl('convenio'),
                 'seguro' => $intern->getFirstMediaUrl('seguro'),
-            ]
+            ],
         ]);
     }
 
@@ -129,7 +139,7 @@ class InternController extends Controller
             'current_documents' => [
                 'dni' => $intern->getFirstMediaUrl('dni_scan'),
                 'convenio' => $intern->getFirstMediaUrl('convenio'),
-            ]
+            ],
         ]);
     }
 
@@ -166,10 +176,10 @@ class InternController extends Controller
     {
         $intern = Intern::findOrFail($id);
 
-        if($intern->user_id) {
+        if ($intern->user_id) {
             User::where('id', $intern->user_id)->delete();
         }
-        
+
         $intern->delete();
 
         return redirect()->route('becarios.index')

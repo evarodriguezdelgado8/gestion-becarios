@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Schedule;
+use App\Models\Intern;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class ScheduleController extends Controller
@@ -12,19 +12,27 @@ class ScheduleController extends Controller
     /**
      * Mostrar los horarios de un becario específico.
      */
-    public function edit(User $intern)
+    public function edit(Intern $intern)
     {
+        $scheduleOwner = $intern->user;
+
+        abort_unless($scheduleOwner, 404, 'El becario no tiene un usuario asociado.');
+
         return Inertia::render('control-horario/config', [
             'intern' => $intern, 
-            'currentSchedules' => $intern->schedules,
+            'currentSchedules' => $scheduleOwner->schedules,
         ]);
     }
 
     /**
      * Guardar el horario semanal.
      */
-    public function store(Request $request, User $intern)
+    public function store(Request $request, Intern $intern)
     {
+        $scheduleOwner = $intern->user;
+
+        abort_unless($scheduleOwner, 404, 'El becario no tiene un usuario asociado.');
+
         $request->validate([
             'schedules' => 'required|array',
             'schedules.*.day_of_week' => 'required|integer|min:1|max:7',
@@ -33,14 +41,26 @@ class ScheduleController extends Controller
             'schedules.*.enabled' => 'required|boolean',
         ]);
 
-        $intern->schedules()->delete();
+        foreach ($request->schedules as $schedule) {
+            if (! ($schedule['enabled'] ?? false)) {
+                continue;
+            }
+
+            if (empty($schedule['start_time']) || empty($schedule['end_time']) || $schedule['end_time'] <= $schedule['start_time']) {
+                throw ValidationException::withMessages([
+                    'schedules' => 'Cada dia activo necesita una hora de inicio y fin valida.',
+                ]);
+            }
+        }
+
+        $scheduleOwner->schedules()->delete();
 
         foreach ($request->schedules as $schedule) {
             if (!($schedule['enabled'] ?? false)) {
                 continue;
             }
 
-            $intern->schedules()->create([
+            $scheduleOwner->schedules()->create([
                 'day_of_week' => $schedule['day_of_week'],
                 'start_time' => $schedule['start_time'],
                 'end_time' => $schedule['end_time'],

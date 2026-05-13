@@ -2,8 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Center;
+use App\Models\Intern;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -30,20 +33,37 @@ class DatabaseSeeder extends Seeder
         ]);
         $tutor->assignRole('tutor');
 
+        $centers = Center::factory(20)->create();
+
         $internUser = User::factory()->create([
             'name' => 'Becario Prueba',
             'email' => 'becario@ejemplo.com',
-            'password' => bcrypt('12345678'),
+            'password' => Hash::make('12345678'),
         ]);
         $internUser->assignRole('intern');
 
+        Intern::factory()->create([
+            'center_id' => $centers->first()->id,
+            'user_id' => $internUser->id,
+            'name' => 'Becario',
+            'last_name' => 'Prueba',
+            'email' => $internUser->email,
+        ]);
 
-        \App\Models\Center::factory(20)
-        ->create()
-        ->each(function ($center) {
-            \App\Models\Intern::factory(rand(2, 5))->create([
+        $centers->each(function (Center $center) {
+            Intern::factory(rand(2, 5))->make([
                 'center_id' => $center->id,
-            ]);
+            ])->each(function (Intern $intern) {
+                $user = User::factory()->create([
+                    'name' => trim($intern->name.' '.$intern->last_name),
+                    'email' => $intern->email,
+                    'password' => Hash::make($intern->dni),
+                ]);
+                $user->assignRole('intern');
+
+                $intern->user_id = $user->id;
+                $intern->save();
+            });
         });
     }
 }

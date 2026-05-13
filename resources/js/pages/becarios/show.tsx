@@ -11,6 +11,7 @@ import type { Intern, BreadcrumbItem } from '@/types';
 
 interface Props {
     intern: Intern;
+    schedules: Schedule[];
     documents: {
         dni: string | null;
         convenio: string | null;
@@ -18,7 +19,24 @@ interface Props {
     };
 }
 
-export default function Show({ intern, documents }: Props) {
+interface Schedule {
+    id: number;
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+}
+
+const WEEK_DAYS: Record<number, string> = {
+    1: 'Lunes',
+    2: 'Martes',
+    3: 'Miércoles',
+    4: 'Jueves',
+    5: 'Viernes',
+    6: 'Sábado',
+    7: 'Domingo',
+};
+
+export default function Show({ intern, schedules, documents }: Props) {
     const formatDate = (dateString: string | null) => {
         if (!dateString) return null;
         const date = new Date(dateString);
@@ -58,6 +76,7 @@ export default function Show({ intern, documents }: Props) {
     };
 
     const currentStatus = statusConfig[intern.status as keyof typeof statusConfig] || statusConfig.abandoned;
+    const hasSchedules = schedules.length > 0;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -223,6 +242,28 @@ export default function Show({ intern, documents }: Props) {
                                 ></div>
                             </div>
                             <p className="text-right text-[11px] font-bold text-blue-600 mt-2">{progress}% COMPLETADO</p>
+                        </div>
+
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                            <h3 className="font-bold uppercase text-gray-900 mb-4 flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-gray-900" /> Horario asignado
+                            </h3>
+                            {hasSchedules ? (
+                                <div className="space-y-2">
+                                    {schedules.map((schedule) => (
+                                        <div key={schedule.id} className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2">
+                                            <span className="text-sm font-bold text-slate-800">{WEEK_DAYS[schedule.day_of_week]}</span>
+                                            <span className="font-mono text-xs font-bold text-blue-700">
+                                                {schedule.start_time} - {schedule.end_time}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm font-medium text-gray-400">
+                                    No tiene horario asignado.
+                                </div>
+                            )}
                         </div>
 
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">

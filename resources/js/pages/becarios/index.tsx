@@ -45,7 +45,17 @@ const statusMap: Record<string, { label: string; class: string }> = {
     'abandoned': { label: 'Abandonado', class: 'bg-red-100 text-red-700' },
 };
 
-const FilterDatePicker = ({ name, value, label }: { name: string, value: string, label: string }) => (
+const FilterDatePicker = ({
+    name,
+    value,
+    label,
+    onChange,
+}: {
+    name: string;
+    value: string;
+    label: string;
+    onChange: (name: string, value: string) => void;
+}) => (
     <div>
         <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">{label}</label>
         <Popover>
@@ -65,7 +75,7 @@ const FilterDatePicker = ({ name, value, label }: { name: string, value: string,
                 <Calendar
                     mode="single"
                     selected={value ? new Date(value) : undefined}
-                    onSelect={(date) => handleFilterChange(name, date ? format(date, "yyyy-MM-dd") : '')}
+                    onSelect={(date) => onChange(name, date ? format(date, "yyyy-MM-dd") : '')}
                 />
             </PopoverContent>
         </Popover>
@@ -297,10 +307,10 @@ export default function Index({ interns, filters, centers, flash }: Props) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-4 border-t border-gray-100">
                         {/* FILTROS CON CALENDARIO NUEVO */}
-                        <FilterDatePicker name="start_from" value={params.start_from} label="Inicio (Desde)" />
-                        <FilterDatePicker name="start_to" value={params.start_to} label="Inicio (Hasta)" />
-                        <FilterDatePicker name="end_from" value={params.end_from} label="Fin (Desde)" />
-                        <FilterDatePicker name="end_to" value={params.end_to} label="Fin (Hasta)" />
+                        <FilterDatePicker name="start_from" value={params.start_from} label="Inicio (Desde)" onChange={handleFilterChange} />
+                        <FilterDatePicker name="start_to" value={params.start_to} label="Inicio (Hasta)" onChange={handleFilterChange} />
+                        <FilterDatePicker name="end_from" value={params.end_from} label="Fin (Desde)" onChange={handleFilterChange} />
+                        <FilterDatePicker name="end_to" value={params.end_to} label="Fin (Hasta)" onChange={handleFilterChange} />
 
                         <div className="flex flex-col">
                             <label className="text-[10px] font-bold uppercase mb-1 block opacity-0 select-none">Espaciador</label>
