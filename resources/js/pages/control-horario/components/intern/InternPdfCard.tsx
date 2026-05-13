@@ -3,7 +3,7 @@ import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
-import { type Period } from './internUtils';
+import type {Period} from './internUtils';
 
 interface InternPdfCardProps {
     pdfPeriod: Period;

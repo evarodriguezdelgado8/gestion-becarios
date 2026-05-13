@@ -65,11 +65,7 @@ export default function Index({
         }
     };
 
-    const clearFilters = () => {
-        setSearch('');
-        router.get('/centros', {}, { preserveState: true, replace: true, preserveScroll: true });
-    };
-
+    
     const columns = [
         {
             header: 'Institución',

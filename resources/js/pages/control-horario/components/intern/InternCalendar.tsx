@@ -102,7 +102,7 @@ export default function InternCalendar({ registries, schedules, absences, intern
         }
 
         return events;
-    }, [absences, intern?.end_date, intern?.start_date, liveNow, registries, schedules]);
+    }, [absences, intern, liveNow, registries, schedules]); //[absences, intern?.end_date, intern?.start_date, liveNow, registries, schedules]);
 
     return (
         <Card className="overflow-hidden rounded-[32px] border-none bg-white p-8 shadow-xl">

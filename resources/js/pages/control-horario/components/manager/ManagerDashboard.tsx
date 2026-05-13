@@ -1,10 +1,10 @@
 import { router, useForm } from '@inertiajs/react';
 import { Calendar as CalendarIcon, Edit3, FileText, History, Users } from 'lucide-react';
-import { type FormEvent, useEffect, useState } from 'react';
+import {  useEffect, useState } from 'react';
+import type {FormEvent} from 'react';
 import { toast } from 'sonner';
 
 import ClearFiltersButton from '@/components/common/ClearFiltersButton';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,9 +15,9 @@ import BulkScheduleForm from './BulkScheduleForm';
 import ManagerAlertsCard from './ManagerAlertsCard';
 import { ManagerHomePanel, SummaryCard } from './ManagerHomePanel';
 import ManagerPdfCard from './ManagerPdfCard';
+import { formatDurationFromHours, getIsoWeekday, toDateKey } from './managerUtils';
 import ManualRegistryForm from './ManualRegistryForm';
 import RegistriesTable from './RegistriesTable';
-import { formatDurationFromHours, getIsoWeekday, toDateKey } from './managerUtils';
 
 interface DaySchedule {
     start: string;
@@ -98,7 +98,7 @@ export default function ManagerDashboard({
             return;
         }
 
-        setCurrentTime(Date.now());
+        //setCurrentTime(Date.now());
         const interval = setInterval(() => setCurrentTime(Date.now()), 30000);
 
         return () => clearInterval(interval);
