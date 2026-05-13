@@ -10,8 +10,8 @@ import {
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
-import type { Column } from '@/components/common/DataTable';
 import ClearFiltersButton from '@/components/common/ClearFiltersButton';
+import type { Column } from '@/components/common/DataTable';
 import DataTable from '@/components/common/DataTable';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import SearchInput from '@/components/common/SearchInput';

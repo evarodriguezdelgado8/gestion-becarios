@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { Clock, FileText, Plus } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
+import {  useState } from 'react';
+import type {FormEvent} from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';

@@ -1,5 +1,6 @@
-import { Children, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { Children  } from 'react';
+import type {ReactNode} from 'react';
 
 import { Card } from '@/components/ui/card';
 

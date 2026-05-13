@@ -3,7 +3,8 @@ import { useMemo, useState } from 'react';
 
 import { Card } from '@/components/ui/card';
 
-import { formatDurationFromHours, getIsoWeekday, getRegistryWorkedHours, hoursBetweenTimeStrings, toDateKey, type Period } from './internUtils';
+import { formatDurationFromHours, getIsoWeekday, getRegistryWorkedHours, hoursBetweenTimeStrings, toDateKey  } from './internUtils';
+import type {Period} from './internUtils';
 
 interface InternHoursChartProps {
     activeSession: any;

@@ -9,8 +9,9 @@ import InternHoursChart from './components/intern/InternHoursChart';
 import InternPdfCard from './components/intern/InternPdfCard';
 import InternSummaryCards from './components/intern/InternSummaryCards';
 import InternTabsNav from './components/intern/InternTabsNav';
+import { getRegistryWorkedHours  } from './components/intern/internUtils';
+import type {Period} from './components/intern/internUtils';
 import TodayScheduleCard from './components/intern/TodayScheduleCard';
-import { getRegistryWorkedHours, type Period } from './components/intern/internUtils';
 
 interface Props {
     activeSession: any;
@@ -46,7 +47,7 @@ export default function InternDashboard({
     handlePdfDownload,
 }: Props) {
     const targetHours = Math.max(Number(intern?.total_hours || 400), 1);
-    const liveNow = useMemo(() => new Date(), [elapsedTime]);
+    const liveNow = useMemo(() => new Date(), []);
     const registriesWithActiveSession = useMemo(() => {
         if (!activeSession || registries.some((registry) => registry.id === activeSession.id)) {
             return registries;
