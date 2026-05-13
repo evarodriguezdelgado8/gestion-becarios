@@ -10,10 +10,11 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Plus, Trash2, LayoutDashboard, List } from 'lucide-react';
+import { Plus, LayoutDashboard, List } from 'lucide-react';
 import { useReducer, useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
+import ClearFiltersButton from '@/components/common/ClearFiltersButton';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { DatePicker } from "@/components/ui/date-picker";
 import { MultiSelect } from "@/components/ui/multi-select";
@@ -127,28 +128,28 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
     return (
         <AppLayout breadcrumbs={[{ title: 'Tareas', href: '/tareas' }]}>
             <Head title="Gestión de Tareas" />
-            <div className="p-6 flex flex-col h-screen max-h-[calc(100vh-65px)]">
+            <div className="mx-auto flex h-[calc(100vh-65px)] w-full max-w-[96rem] flex-col space-y-6 p-4 md:p-8">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-6 shrink-0">
+                <div className="flex shrink-0 flex-col items-center justify-between gap-4 md:flex-row">
                     <h1 className="text-2xl font-bold text-gray-900">Gestión de Tareas</h1>
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
-                            <button onClick={() => setViewMode('kanban')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'kanban' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><LayoutDashboard size={16} /> Kanban</button>
-                            <button onClick={() => setViewMode('list')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><List size={16} /> Lista</button>
+                        <div className="flex items-center rounded-2xl border border-slate-200 bg-slate-100 p-1">
+                            <button onClick={() => setViewMode('kanban')} className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-bold transition-all ${viewMode === 'kanban' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><LayoutDashboard size={16} /> Kanban</button>
+                            <button onClick={() => setViewMode('list')} className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-bold transition-all ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><List size={16} /> Lista</button>
                         </div>
                         {!isBecario && (
-                            <button onClick={() => { setSelectedTask(null); setInitialStatus('pending'); setIsFormOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all shadow-sm font-medium"><Plus size={18} /> Nueva Tarea</button>
+                            <button onClick={() => { setSelectedTask(null); setInitialStatus('pending'); setIsFormOpen(true); }} className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700"><Plus size={18} /> Nueva Tarea</button>
                         )}
                     </div>
                 </div>
 
                 {/* Filtros */}
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 space-y-4 shrink-0">
+                <div className="shrink-0 space-y-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xl">
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
                         <input 
                             type="text" 
                             placeholder="Buscar por título..." 
-                            className="w-full pl-3 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" 
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                             value={searchQuery} 
                             onChange={(e) => { setSearchQuery(e.target.value); applyFilters({ search: e.target.value }); }} 
                         />
@@ -183,23 +184,21 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
                         <DatePicker date={selectedDate} onChange={(val) => { setSelectedDate(val || ''); applyFilters({ due_date: val }); }} />
                     </div>
                     <div className="flex justify-end">
-                        <button onClick={clearFilters} className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors">
-                            <Trash2 size={14} /> Borrar filtros
-                        </button>
+                        <ClearFiltersButton onClick={clearFilters} />
                     </div>
                 </div>
 
                 {/* Tablero Kanban / Lista */}
                 {viewMode === 'kanban' ? (
                     <DndContext sensors={sensors} collisionDetection={collisionDetectionStrategy} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                        <div className="flex gap-4 overflow-x-auto pb-4 flex-1 min-h-0 items-start">
+                        <div className="grid min-h-0 flex-1 auto-cols-[minmax(17rem,1fr)] grid-flow-col items-start gap-3 overflow-x-auto overflow-y-hidden pb-4 xl:grid-flow-row xl:grid-cols-5 xl:auto-cols-auto xl:overflow-y-auto">
                             {Object.entries(state).map(([columnId, tasks]: [string, any]) => (
                                 <KanbanColumn key={columnId} columnId={columnId} tasks={tasks} isBecario={isBecario} onEdit={(task: any) => { setSelectedTask(task); setIsFormOpen(true); }} onDelete={(task: any) => { setSelectedTask(task); setIsDeleteOpen(true); }} onCreate={(status: string) => { setInitialStatus(status); setSelectedTask(null); setIsFormOpen(true); }} />
                             ))}
                         </div>
                         <DragOverlay adjustScale={false}>
                             {activeTask ? (
-                                <div className="bg-white p-4 rounded-lg border-2 border-blue-500 shadow-2xl w-[310px] cursor-grabbing scale-105 ring-4 ring-blue-500/5">
+                                <div className="w-[310px] scale-105 cursor-grabbing rounded-2xl border-2 border-blue-500 bg-white p-4 shadow-2xl ring-4 ring-blue-500/5">
                                     <div className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border inline-block mb-2 ${getPriorityStyle(activeTask.priority)}`}>
                                         {PRIORITY_LABELS[activeTask.priority]}
                                     </div>
@@ -209,15 +208,15 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
                         </DragOverlay>
                     </DndContext>
                 ) : (
-                    <div className="flex-1 overflow-hidden bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                    <div className="flex flex-1 flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xl">
                         <div className="overflow-y-auto">
                             <table className="w-full text-left border-collapse">
-                                <thead className="bg-slate-50 sticky top-0 z-10">
+                                <thead className="sticky top-0 z-10 bg-slate-50/90">
                                     <tr>
-                                        <th className="p-4 text-xs font-bold uppercase text-slate-500 border-b">Tarea</th>
-                                        <th className="p-4 text-xs font-bold uppercase text-slate-500 border-b">Estado</th>
-                                        <th className="p-4 text-xs font-bold uppercase text-slate-500 border-b">Becario</th>
-                                        <th className="p-4 text-xs font-bold uppercase text-slate-500 border-b">Acciones</th>
+                                        <th className="border-b border-slate-100 p-4 text-xs font-black uppercase tracking-widest text-slate-400">Tarea</th>
+                                        <th className="border-b border-slate-100 p-4 text-xs font-black uppercase tracking-widest text-slate-400">Estado</th>
+                                        <th className="border-b border-slate-100 p-4 text-xs font-black uppercase tracking-widest text-slate-400">Becario</th>
+                                        <th className="border-b border-slate-100 p-4 text-xs font-black uppercase tracking-widest text-slate-400">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">

@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 // Componentes Comunes
 import DataTable from '@/components/common/DataTable';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
-import SearchInput from '@/components/common/SearchInput'; // <-- Nuevo
+import SearchInput from '@/components/common/SearchInput';
 import AppLayout from '@/layouts/app-layout';
 
 import type { Center, Pagination } from '@/types';
@@ -63,6 +63,11 @@ export default function Index({
                 },
             });
         }
+    };
+
+    const clearFilters = () => {
+        setSearch('');
+        router.get('/centros', {}, { preserveState: true, replace: true, preserveScroll: true });
     };
 
     const columns = [
@@ -147,7 +152,7 @@ export default function Index({
             <div className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">
                 <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
                     <h2 className="text-2xl font-bold text-gray-800">Centros Educativos</h2>
-                    <div className="flex w-full md:w-auto gap-3">
+                    <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
                         {/* REEMPLAZO POR COMPONENTE COMÚN */}
                         <SearchInput 
                             value={search}
@@ -155,6 +160,7 @@ export default function Index({
                             placeholder="Nombre, NIF, email..."
                             className="flex-1 md:w-80"
                         />
+                        
                         
                         {isAdmin && (
                             <Link href="/centros/create" className="flex items-center gap-2 whitespace-nowrap rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700">

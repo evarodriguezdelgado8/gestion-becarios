@@ -5,12 +5,13 @@ import {
     User, Mail, Building2, GraduationCap, 
     Edit2, Trash2, Plus,
     Copy, Check, Calendar as CalendarIcon, AlertCircle,
-    Phone, FileDown, X
+    Phone, FileDown
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
 import type { Column } from '@/components/common/DataTable';
+import ClearFiltersButton from '@/components/common/ClearFiltersButton';
 import DataTable from '@/components/common/DataTable';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import SearchInput from '@/components/common/SearchInput';
@@ -314,13 +315,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
 
                         <div className="flex flex-col">
                             <label className="text-[10px] font-bold uppercase mb-1 block opacity-0 select-none">Espaciador</label>
-                            <button 
-                                onClick={resetFilters} 
-                                className="flex h-[38px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-500 transition-colors hover:border-red-200 hover:text-red-600"
-                            >
-                                <X className="w-4 h-4" /> 
-                                <span>Limpiar</span>
-                            </button>
+                            <ClearFiltersButton onClick={resetFilters} className="h-[38px] w-full" />
                         </div>
                     </div>
                 </div>

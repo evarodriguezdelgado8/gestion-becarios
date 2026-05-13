@@ -54,7 +54,7 @@ export default function DataTable<T>({
                                     {col.header}
                                 </TableHead>
                             ))}
-                            {actions && <TableHead className="w-[128px] px-6 py-4 text-right font-black text-slate-400">Acciones</TableHead>}
+                            {actions && <TableHead className="w-[128px] px-6 py-4 text-right font-black text-slate-400"></TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y divide-slate-100">
@@ -67,7 +67,7 @@ export default function DataTable<T>({
                                         </TableCell>
                                     ))}
                                     {actions && (
-                                        <TableCell className="whitespace-normal px-6 py-5 text-right align-top">
+                                        <TableCell className="whitespace-normal px-6 py-5 text-right align-middle">
                                             {actions(item)}
                                         </TableCell>
                                     )}

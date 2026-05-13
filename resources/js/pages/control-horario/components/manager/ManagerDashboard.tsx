@@ -1,8 +1,9 @@
 import { router, useForm } from '@inertiajs/react';
-import { Calendar as CalendarIcon, Edit3, FileText, History, Users, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Edit3, FileText, History, Users } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import ClearFiltersButton from '@/components/common/ClearFiltersButton';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { MultiSelect } from '@/components/ui/multi-select';
@@ -392,9 +393,7 @@ export default function ManagerDashboard({
                             placeholder="Cualquier ciclo"
                         />
                     </div>
-                    <Button variant="ghost" onClick={() => router.get('/control-horario')} className="h-10 rounded-xl text-slate-400 hover:text-red-500">
-                        <X className="mr-2 h-4 w-4" /> Limpiar filtros
-                    </Button>
+                    <ClearFiltersButton onClick={() => router.get('/control-horario')} className="w-full md:w-auto" />
                 </div>
             </Card>
 

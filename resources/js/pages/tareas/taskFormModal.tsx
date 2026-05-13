@@ -4,6 +4,7 @@ import { useForm } from '@inertiajs/react';
 import { X, RefreshCcw, CheckSquare, Paperclip, Users } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { toast } from 'sonner';
+import ClearFiltersButton from '@/components/common/ClearFiltersButton';
 import { DatePicker } from "@/components/ui/date-picker";
 import { MultiSelect } from "@/components/ui/multi-select";
 
@@ -193,9 +194,7 @@ export default function TaskFormModal({ isOpen, onClose, task, initialStatus, in
                                         <button type="button" onClick={toggleSelectAllVisible} className="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-2 rounded-lg hover:bg-blue-200 transition-all flex items-center gap-2">
                                             <Users size={14}/> {allFilteredAreSelected ? 'Deseleccionar' : 'Seleccionar visibles'}
                                         </button>
-                                        <button type="button" onClick={clearFilters} className="text-xs font-bold text-red-600 bg-red-100 px-3 py-2 rounded-lg hover:bg-red-200 transition-all flex items-center gap-2">
-                                            <RefreshCcw size={14}/> Limpiar
-                                        </button>
+                                        <ClearFiltersButton onClick={clearFilters} className="h-9 px-3 text-xs" />
                                     </div>
                                 </div>
 
