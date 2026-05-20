@@ -293,9 +293,7 @@ export default function InternHoursChart({ activeSession, registries, schedules,
                             <p className="text-sm font-black text-slate-900">Horario asignado</p>
                         </div>
                     </div>
-                    <p className="text-[11px] leading-relaxed text-slate-400 sm:col-span-2 xl:col-span-1">
-                        Los picos muy altos se ajustan visualmente para mantener legibles el resto de dias.
-                    </p>
+                    
                 </div>
             </div>
 
