@@ -37,10 +37,11 @@ interface Props {
 }
 
 export default function RolesIndex({ roles, allPermissions }: Props) {
+    const translatedPermissions = allPermissions.filter((permission) => permissionTranslations[permission.name]);
     const getGroupedPermissions = () => {
         return {
-            'Centros Educativos': allPermissions.filter(p => p.name.includes('center')),
-            'Becarios': allPermissions.filter(p => p.name.includes('intern')),
+            'Centros Educativos': translatedPermissions.filter(p => p.name.includes('center')),
+            'Becarios': translatedPermissions.filter(p => p.name.includes('intern')),
             'Gestión de Tareas': allPermissions.filter(p => p.name.includes('task') || p.name.includes('deliverable') || p.name.includes('specification')),
             'Evaluación y Sistema': allPermissions.filter(p => !p.name.includes('center') && !p.name.includes('intern') && !p.name.includes('task') && !p.name.includes('deliverable') && !p.name.includes('specification')),
         };
@@ -102,10 +103,7 @@ export default function RolesIndex({ roles, allPermissions }: Props) {
                                                         <td className="p-4 pl-8 border-b border-slate-100">
                                                             <div className="flex flex-col">
                                                                 <span className="text-slate-800 font-semibold text-[15px]">
-                                                                    {permissionTranslations[permission.name] || permission.name}
-                                                                </span>
-                                                                <span className="text-[10px] text-slate-400 font-mono mt-0.5">
-                                                                    {permission.name}
+                                                                    {permissionTranslations[permission.name]}
                                                                 </span>
                                                             </div>
                                                         </td>

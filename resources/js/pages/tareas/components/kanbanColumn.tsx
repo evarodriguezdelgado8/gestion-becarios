@@ -6,6 +6,66 @@ import { Edit, Trash2, User, MessageSquare, Calendar, Plus } from 'lucide-react'
 import React from 'react';
 import { getStatusConfig, STATUS_LABELS, PRIORITY_LABELS, getPriorityStyle, getDueDateStyle } from '../taskUtils';
 
+export function TaskCardPreview({ task, isBecario = false, onEdit, onDelete, clickable = true }: any) {
+    const titleClasses = `mb-2 block line-clamp-2 text-sm font-bold text-slate-800 ${
+        clickable ? 'hover:text-blue-700' : ''
+    }`;
+
+    return (
+        <>
+            <div className="mb-2 flex items-start justify-between gap-2">
+                <div className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${getPriorityStyle(task.priority)}`}>
+                    {PRIORITY_LABELS[task.priority]}
+                </div>
+                {!isBecario && onEdit && onDelete && (
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={(e) => { e.stopPropagation(); onEdit(task); }} className="p-1 text-slate-400 hover:text-blue-600">
+                            <Edit size={14} />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); onDelete(task); }} className="p-1 text-slate-400 hover:text-red-600">
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {clickable ? (
+                <Link
+                    href={`/tareas/${task.id}`}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    className={titleClasses}
+                >
+                    {task.title}
+                </Link>
+            ) : (
+                <div className={titleClasses}>{task.title}</div>
+            )}
+
+            <div className="mb-3 flex items-center gap-1.5 text-[12px] text-slate-500">
+                <User size={12} className="shrink-0" />
+                <span className="truncate">
+                    {task.intern ? `${task.intern.name} ${task.intern.last_name}` : 'Sin asignar'}
+                </span>
+            </div>
+
+            <div className="flex items-center justify-between gap-2 border-t border-slate-50 pt-3">
+                <div className="flex gap-3 text-slate-400">
+                    <div className="flex items-center gap-1">
+                        <MessageSquare size={12}/>
+                        <span className="text-[10px]">{task.comments_count || 0}</span>
+                    </div>
+                </div>
+                {task.due_date && (
+                    <div className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold ${getDueDateStyle(task.due_date)}`}>
+                        <Calendar size={10} />
+                        {new Date(task.due_date).toLocaleDateString('es-ES')}
+                    </div>
+                )}
+            </div>
+        </>
+    );
+}
+
 function TaskCard({ task, isBecario, onEdit, onDelete, columnId }: any) {
     const {
         attributes,
@@ -36,51 +96,7 @@ function TaskCard({ task, isBecario, onEdit, onDelete, columnId }: any) {
             // Mantenemos tus clases, pero quitamos el z-10 para que no tape el overlay
             className={`group relative cursor-grab rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-all hover:border-blue-400 active:cursor-grabbing ${isDragging ? 'invisible' : ''}`}
         >
-            <div className="mb-2 flex items-start justify-between gap-2">
-                <div className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${getPriorityStyle(task.priority)}`}>
-                    {PRIORITY_LABELS[task.priority]}
-                </div>
-                {!isBecario && (
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={(e) => { e.stopPropagation(); onEdit(task); }} className="p-1 text-slate-400 hover:text-blue-600">
-                            <Edit size={14} />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); onDelete(task); }} className="p-1 text-slate-400 hover:text-red-600">
-                            <Trash2 size={14} />
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            <Link 
-                href={`/tareas/${task.id}`} 
-                onPointerDown={(e) => e.stopPropagation()}
-                className="mb-2 block line-clamp-2 text-sm font-bold text-slate-800 hover:text-blue-700"
-            >
-                {task.title}
-            </Link>
-
-            <div className="mb-3 flex items-center gap-1.5 text-[12px] text-slate-500">
-                <User size={12} className="shrink-0" />
-                <span className="truncate">
-                    {task.intern ? `${task.intern.name} ${task.intern.last_name}` : 'Sin asignar'}
-                </span>
-            </div>
-
-            <div className="flex items-center justify-between gap-2 border-t border-slate-50 pt-3">
-                <div className="flex gap-3 text-slate-400">
-                    <div className="flex items-center gap-1">
-                        <MessageSquare size={12}/>
-                        <span className="text-[10px]">{task.comments_count || 0}</span>
-                    </div>
-                </div>
-                {task.due_date && (
-                    <div className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold ${getDueDateStyle(task.due_date)}`}>
-                        <Calendar size={10} /> 
-                        {new Date(task.due_date).toLocaleDateString('es-ES')}
-                    </div>
-                )}
-            </div>
+            <TaskCardPreview task={task} isBecario={isBecario} onEdit={onEdit} onDelete={onDelete} />
         </div>
     );
 }

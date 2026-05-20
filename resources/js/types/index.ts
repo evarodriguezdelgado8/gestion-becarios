@@ -70,6 +70,12 @@ export interface Intern {
         id: number;
         name: string;
     };
+    tutor_id?: number | null;
+    tutor?: {
+        id: number;
+        name: string;
+        email?: string;
+    } | null;
     academic_tutor: string;
     start_date: string;
     end_date: string;
@@ -84,6 +90,7 @@ export interface InternFormData {
     phone: string;
     address: string;
     center_id: string | number;
+    tutor_id: string | number;
     academic_cycle: string;
     academic_tutor: string;
     start_date: string;

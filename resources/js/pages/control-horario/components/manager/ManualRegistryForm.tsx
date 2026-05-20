@@ -48,12 +48,7 @@ export default function ManualRegistryForm({ manualForm, eligibleBecarios, eligi
                             <option value="normal">Puntual</option>
                             <option value="late">Retraso</option>
                         </select>
-                    </div>
-                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-                        <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Resumen</p>
-                        <p className="mt-3 text-sm font-medium text-emerald-900">Se creará un fichaje manual para los becarios con usuario asociado incluidos en los filtros actuales.</p>
-                        <p className="mt-3 text-xs text-emerald-700">El total de horas se calcula automáticamente al guardar.</p>
-                    </div>
+                    </div>                    
                 </div>
 
                 <div className="flex justify-end">

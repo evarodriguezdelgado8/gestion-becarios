@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Rules\ValidDni;
 
@@ -40,6 +41,7 @@ class InternRequest extends FormRequest
             'address'           => 'required|string',
 
             'center_id'         => 'required|exists:centers,id',
+            'tutor_id'          => 'required|exists:users,id',
             'academic_cycle'    => 'required|in:ASIR,DAM,DAW',
             'academic_tutor'    => 'required|string|max:255',
 
@@ -64,5 +66,19 @@ class InternRequest extends FormRequest
             'email.unique' => 'Este correo electrónico ya está en uso.',
             'end_date.after' => 'La fecha de fin debe ser posterior a la de inicio.',
         ];
+    }
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if (! $this->filled('tutor_id')) {
+                return;
+            }
+
+            $tutor = User::find($this->input('tutor_id'));
+
+            if (! $tutor?->hasRole('tutor')) {
+                $validator->errors()->add('tutor_id', 'El tutor asignado debe ser un usuario con rol tutor.');
+            }
+        });
     }
 }

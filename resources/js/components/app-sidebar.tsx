@@ -35,6 +35,7 @@ export function AppSidebar() {
     const { auth } = usePage().props as any;
     const userPermissions = auth.user?.permissions || [];
     const userRoles = auth.user?.roles || [];
+    const userRoleNames = userRoles.map((role: any) => (typeof role === 'object' ? role.name : role));
 
     const allNavItems: SidebarNavItem[] = [
         {
@@ -68,11 +69,23 @@ export function AppSidebar() {
         },
         {
             title: 'Evaluación y Notas',
-            href: '/evaluacion',
+            href: '/evaluaciones',
             icon: GraduationCap,
-            permission: 'evaluate progress',
+            role: 'tutor',
+        },
+        {
+            title: 'Evaluación y Notas',
+            href: '/evaluaciones',
+            icon: GraduationCap,
+            role: 'admin',
         },
         // --- SECCIÓN DE ADMINISTRACIÓN ---
+        {
+            title: 'Mis Evaluaciones',
+            href: '/mis-evaluaciones',
+            icon: GraduationCap,
+            role: 'intern',
+        },
         {
             title: 'Roles y Permisos',
             href: '/admin',
@@ -83,7 +96,7 @@ export function AppSidebar() {
 
     const filteredNavItems = allNavItems.filter((item) => {
         // 1. Si tiene restricción de rol (como la matriz de permisos)
-        if (item.role && !userRoles.includes(item.role)) return false;
+        if (item.role && !userRoleNames.includes(item.role)) return false;
         
         // 2. Si tiene restricción de permiso
         if (item.permission && !userPermissions.includes(item.permission)) return false;

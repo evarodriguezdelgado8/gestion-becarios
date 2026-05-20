@@ -6,9 +6,10 @@ import InternForm from './components/internForm';
 interface Props {
     intern: Intern;
     centers: Center[];
+    tutors: { id: number; name: string; email?: string }[];
 }
 
-export default function Edit({ intern, centers }: Props) {
+export default function Edit({ intern, centers, tutors }: Props) {
     const { data, setData, post, processing, errors } = useForm<InternFormData & { _method: string }>({
         _method: 'put',
         name: intern.name || '',
@@ -18,6 +19,7 @@ export default function Edit({ intern, centers }: Props) {
         phone: intern.phone || '',
         address: intern.address || '',
         center_id: intern.center_id || '',
+        tutor_id: intern.tutor_id || '',
         academic_cycle: intern.academic_cycle || '',
         academic_tutor: intern.academic_tutor || '',
         start_date: intern.start_date || '',
@@ -52,6 +54,7 @@ export default function Edit({ intern, centers }: Props) {
                             errors={errors}
                             processing={processing}
                             centers={centers}
+                            tutors={tutors}
                             submitText="Guardar Cambios"
                             isEdit={true}
                         />

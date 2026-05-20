@@ -6,6 +6,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TimeRegistryController;
 use App\Http\Controllers\AbsenceController;
+use App\Http\Controllers\EvaluationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -94,8 +95,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // --- MÓDULO: EVALUACIÓN ---
-    Route::middleware(['permission:evaluate progress|view own tasks'])->group(function () {
-        Route::inertia('evaluacion', 'evaluacion/index')->name('evaluacion');
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/evaluaciones/{evaluation}/pdf', [EvaluationController::class, 'exportPdf'])->name('evaluaciones.pdf');
+        
+        // Rutas compartidas por Admin y Tutor (Evaluar y Ver Historial)
+        Route::middleware(['role:admin|tutor'])->group(function () {
+            Route::get('/evaluaciones', [EvaluationController::class, 'index'])->name('evaluaciones.index');
+            Route::get('/evaluaciones/historico', [EvaluationController::class, 'history'])->name('evaluaciones.history');
+            Route::get('/evaluaciones/crear/{intern}', [EvaluationController::class, 'create'])->name('evaluaciones.create');
+            Route::post('/evaluaciones', [EvaluationController::class, 'store'])->name('evaluaciones.store');
+            Route::get('/evaluaciones/{evaluation}/editar', [EvaluationController::class, 'edit'])->name('evaluaciones.edit');
+            Route::put('/evaluaciones/{evaluation}', [EvaluationController::class, 'update'])->name('evaluaciones.update');
+            Route::delete('/evaluaciones/{evaluation}', [EvaluationController::class, 'destroy'])->name('evaluaciones.destroy');
+        });
+
+        Route::middleware(['role:admin'])->group(function () {
+            
+            // Configuracion de Criterios
+            Route::get('/evaluaciones/configuracion', [EvaluationController::class, 'config'])->name('evaluaciones.config');
+            Route::post('/evaluaciones/categorias', [EvaluationController::class, 'storeCategory'])->name('evaluaciones.categories.store');
+            Route::put('/evaluaciones/categorias/{category}', [EvaluationController::class, 'updateCategory'])->name('evaluaciones.categories.update');
+            Route::delete('/evaluaciones/categorias/{category}', [EvaluationController::class, 'destroyCategory'])->name('evaluaciones.categories.destroy');
+            Route::post('/evaluaciones/criterios', [EvaluationController::class, 'storeCriterion'])->name('evaluaciones.criteria.store');
+            Route::put('/evaluaciones/criterios/{criterion}', [EvaluationController::class, 'updateCriterion'])->name('evaluaciones.criteria.update');
+            Route::delete('/evaluaciones/criterios/{criterion}', [EvaluationController::class, 'destroyCriterion'])->name('evaluaciones.criteria.destroy');
+        });
+
+        // Ruta para que el becario vea sus propias notas
+        Route::middleware(['role:intern'])->group(function () {
+            Route::get('/mis-evaluaciones', [EvaluationController::class, 'myEvaluations'])->name('evaluaciones.mine');
+        });
     });
 
     // --- MÓDULO: ADMINISTRACIÓN (Solo Admin) ---

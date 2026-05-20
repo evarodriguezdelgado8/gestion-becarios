@@ -10,8 +10,8 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Plus, LayoutDashboard, List } from 'lucide-react';
-import { useReducer, useState, useEffect, useMemo } from 'react';
+import { ChevronDown, Plus, LayoutDashboard, List, SlidersHorizontal } from 'lucide-react';
+import { useReducer, useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 
 import ClearFiltersButton from '@/components/common/ClearFiltersButton';
@@ -20,10 +20,10 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { MultiSelect } from "@/components/ui/multi-select";
 import AppLayout from '@/layouts/app-layout';
 
-import KanbanColumn from './components/kanbanColumn';
+import KanbanColumn, { TaskCardPreview } from './components/kanbanColumn';
 import TaskTableRow from './components/taskTableRow';
 import TaskFormModal from './taskFormModal';
-import { kanbanReducer, getPriorityStyle, PRIORITY_LABELS } from './taskUtils';
+import { kanbanReducer } from './taskUtils';
 
 export default function Index({ kanban = {}, interns = [], centers = [], filters }: any) {
     const { auth } = usePage().props as any;
@@ -38,6 +38,8 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
     const [activeTask, setActiveTask] = useState<any | null>(null);
     const [initialStatus, setInitialStatus] = useState<string>('pending');
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+    const [filtersOpen, setFiltersOpen] = useState(false);
+    const initialDragStateRef = useRef<any | null>(null);
 
     // 1. OBTENER CICLOS ÚNICOS DE LOS BECARIOS (Como no hay tabla, los sacamos de los alumnos)
     const cycleOptions = useMemo(() => {
@@ -52,6 +54,14 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
     const [selectedDate, setSelectedDate] = useState(filters.due_date || '');
     const [selectedCenters, setSelectedCenters] = useState<string[]>(filters.center_id ? filters.center_id.split(',') : []);
     const [selectedCycles, setSelectedCycles] = useState<string[]>(filters.academic_cycle ? filters.academic_cycle.split(',') : []);
+    const activeFiltersCount = [
+        searchQuery,
+        selectedDate,
+        ...selectedInterns,
+        ...selectedPriorities,
+        ...selectedCenters,
+        ...selectedCycles,
+    ].filter(Boolean).length;
 
     useEffect(() => { dispatch({ type: 'SET_STATE', payload: kanban }); }, [kanban]);
 
@@ -86,35 +96,129 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
         router.get('/tareas', {}, { replace: true, preserveState: false });
     };
 
-    const handleDragStart = (event: any) => { setActiveTask(event.active.data.current.task); };
+    const findTaskLocation = (board: any, taskId: string | number) => {
+        for (const [columnId, tasks] of Object.entries(board) as [string, any[]][]) {
+            const index = tasks.findIndex((task: any) => String(task.id) === String(taskId));
+
+            if (index !== -1) {
+                return { columnId, index };
+            }
+        }
+
+        return null;
+    };
+
+    const getDropDestination = (over: any, board: any) => {
+        const columnId = over.data.current?.columnId || (board[over.id] ? over.id : null);
+
+        if (!columnId || !board[columnId]) {
+            return null;
+        }
+
+        const overIndex = board[columnId].findIndex((task: any) => String(task.id) === String(over.id));
+
+        if (overIndex === -1) {
+            return { columnId, index: board[columnId].length };
+        }
+
+        return { columnId, index: overIndex };
+    };
+
+    const resetDragState = () => {
+        setActiveTask(null);
+        initialDragStateRef.current = null;
+    };
+
+    const handleDragStart = (event: any) => {
+        initialDragStateRef.current = state;
+        setActiveTask(event.active.data.current.task);
+    };
+
+    const handleDragOver = (event: any) => {
+        const { active, over } = event;
+
+        if (!over) return;
+
+        const currentLocation = findTaskLocation(state, active.id);
+        const destination = getDropDestination(over, state);
+
+        if (!currentLocation || !destination || currentLocation.columnId === destination.columnId) {
+            return;
+        }
+
+        dispatch({
+            type: 'MOVE_TASK',
+            payload: {
+                source: currentLocation.columnId,
+                destination: destination.columnId,
+                sourceIndex: currentLocation.index,
+                destIndex: destination.index,
+                taskId: active.id,
+            },
+        });
+    };
+
+    const handleDragCancel = () => {
+        if (initialDragStateRef.current) {
+            dispatch({ type: 'SET_STATE', payload: initialDragStateRef.current });
+        }
+
+        resetDragState();
+    };
 
     const handleDragEnd = (event: any) => {
         const { active, over } = event;
+
         setActiveTask(null);
-        if (!over) return;
+
+        if (!over) {
+            if (initialDragStateRef.current) {
+                dispatch({ type: 'SET_STATE', payload: initialDragStateRef.current });
+            }
+
+            resetDragState();
+            return;
+        }
 
         const activeId = active.id;
-        const overId = over.id;
-        const sourceCol = active.data.current.columnId;
-        const destinationCol = over.data.current?.columnId || overId;
+        const originalLocation = findTaskLocation(initialDragStateRef.current || state, activeId);
+        const currentLocation = findTaskLocation(state, activeId);
+        const destination = getDropDestination(over, state);
 
-        if (!state[destinationCol]) return;
+        if (!originalLocation || !currentLocation || !destination || !state[destination.columnId]) {
+            if (initialDragStateRef.current) {
+                dispatch({ type: 'SET_STATE', payload: initialDragStateRef.current });
+            }
 
-        const sourceTasks = state[sourceCol];
-        const destTasks = state[destinationCol];
-        const sourceIndex = sourceTasks.findIndex((t: any) => t.id === activeId);
-        let destIndex = destTasks.findIndex((t: any) => t.id === overId);
-        
-        if (destIndex === -1) destIndex = destTasks.length;
-        if (sourceCol === destinationCol && sourceIndex === destIndex) return;
+            resetDragState();
+            return;
+        }
 
-        dispatch({ 
-            type: 'MOVE_TASK', 
-            payload: { source: sourceCol, destination: destinationCol, sourceIndex, destIndex } 
-        });
+        const maxDestIndex = currentLocation.columnId === destination.columnId
+            ? state[destination.columnId].length - 1
+            : state[destination.columnId].length;
+        const destIndex = Math.max(0, Math.min(destination.index, Math.max(maxDestIndex, 0)));
+
+        if (currentLocation.columnId !== destination.columnId || currentLocation.index !== destIndex) {
+            dispatch({
+                type: 'MOVE_TASK',
+                payload: {
+                    source: currentLocation.columnId,
+                    destination: destination.columnId,
+                    sourceIndex: currentLocation.index,
+                    destIndex,
+                    taskId: activeId,
+                },
+            });
+        }
+
+        if (originalLocation.columnId === destination.columnId && originalLocation.index === destIndex) {
+            resetDragState();
+            return;
+        }
 
         router.patch(active.data.current.task.update_status_url, { 
-            status: destinationCol, 
+            status: destination.columnId, 
             new_index: destIndex
         }, {
             preserveScroll: true, preserveState: true, only: ['kanban'],
@@ -123,6 +227,8 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
                 toast.error('Error al mover la tarea');
             }
         });
+
+        resetDragState();
     };
 
     return (
@@ -144,7 +250,30 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
                 </div>
 
                 {/* Filtros */}
-                <div className="shrink-0 space-y-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xl">
+                <div className="shrink-0 rounded-3xl border border-slate-200/80 bg-white shadow-xl">
+                    <div className="flex flex-col justify-between gap-3 px-5 py-4 md:flex-row md:items-center">
+                        <button type="button" onClick={() => setFiltersOpen((current) => !current)} className="flex items-center gap-3 text-left">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                                <SlidersHorizontal className="h-5 w-5" />
+                            </span>
+                            <span>
+                                <span className="block text-sm font-black text-slate-900">Filtros</span>
+                                <span className="block text-xs font-semibold text-slate-400">
+                                    {activeFiltersCount > 0 ? `${activeFiltersCount} filtro(s) activo(s)` : 'Pulsa para filtrar el tablero'}
+                                </span>
+                            </span>
+                        </button>
+
+                        <div className="flex items-center justify-end gap-2">
+                            {activeFiltersCount > 0 && <ClearFiltersButton onClick={clearFilters} />}
+                            <button type="button" onClick={() => setFiltersOpen((current) => !current)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50">
+                                <ChevronDown className={`h-4 w-4 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {filtersOpen && (
+                        <div className="space-y-4 border-t border-slate-100 px-5 pb-5 pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
                         <input 
                             type="text" 
@@ -183,14 +312,13 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
                         />
                         <DatePicker date={selectedDate} onChange={(val) => { setSelectedDate(val || ''); applyFilters({ due_date: val }); }} />
                     </div>
-                    <div className="flex justify-end">
-                        <ClearFiltersButton onClick={clearFilters} />
-                    </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Tablero Kanban / Lista */}
                 {viewMode === 'kanban' ? (
-                    <DndContext sensors={sensors} collisionDetection={collisionDetectionStrategy} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                    <DndContext sensors={sensors} collisionDetection={collisionDetectionStrategy} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragCancel={handleDragCancel} onDragEnd={handleDragEnd}>
                         <div className="grid min-h-0 flex-1 auto-cols-[minmax(17rem,1fr)] grid-flow-col items-start gap-3 overflow-x-auto overflow-y-hidden pb-4 xl:grid-flow-row xl:grid-cols-5 xl:auto-cols-auto xl:overflow-y-auto">
                             {Object.entries(state).map(([columnId, tasks]: [string, any]) => (
                                 <KanbanColumn key={columnId} columnId={columnId} tasks={tasks} isBecario={isBecario} onEdit={(task: any) => { setSelectedTask(task); setIsFormOpen(true); }} onDelete={(task: any) => { setSelectedTask(task); setIsDeleteOpen(true); }} onCreate={(status: string) => { setInitialStatus(status); setSelectedTask(null); setIsFormOpen(true); }} />
@@ -198,11 +326,8 @@ export default function Index({ kanban = {}, interns = [], centers = [], filters
                         </div>
                         <DragOverlay adjustScale={false}>
                             {activeTask ? (
-                                <div className="w-[310px] scale-105 cursor-grabbing rounded-2xl border-2 border-blue-500 bg-white p-4 shadow-2xl ring-4 ring-blue-500/5">
-                                    <div className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border inline-block mb-2 ${getPriorityStyle(activeTask.priority)}`}>
-                                        {PRIORITY_LABELS[activeTask.priority]}
-                                    </div>
-                                    <div className="font-bold text-sm text-slate-800">{activeTask.title}</div>
+                                <div className="group w-[310px] cursor-grabbing rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl">
+                                    <TaskCardPreview task={activeTask} isBecario={isBecario} clickable={false} />
                                 </div>
                             ) : null}
                         </DragOverlay>

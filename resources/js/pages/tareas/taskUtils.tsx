@@ -57,13 +57,22 @@ export function kanbanReducer(state: any, action: any): any {
             return action.payload;
 
         case 'MOVE_TASK': {
-            const { source, destination, sourceIndex, destIndex } = action.payload;
+            const { source, destination, sourceIndex, destIndex, taskId } = action.payload;
             
             if (source === destination && sourceIndex === destIndex) return state;
 
             if (source === destination) {
                 const newCol = [...(state[source] || [])];
-                const [movedTask] = newCol.splice(sourceIndex, 1);
+                const resolvedSourceIndex = taskId
+                    ? newCol.findIndex((task: any) => String(task.id) === String(taskId))
+                    : sourceIndex;
+
+                if (resolvedSourceIndex === -1) return state;
+
+                const [movedTask] = newCol.splice(resolvedSourceIndex, 1);
+
+                if (!movedTask) return state;
+
                 newCol.splice(destIndex, 0, movedTask);
                 
                 return { 
@@ -74,8 +83,16 @@ export function kanbanReducer(state: any, action: any): any {
 
             const sourceCol = [...(state[source] || [])];
             const destCol = [...(state[destination] || [])];
+            const resolvedSourceIndex = taskId
+                ? sourceCol.findIndex((task: any) => String(task.id) === String(taskId))
+                : sourceIndex;
             
-            const [movedTask] = sourceCol.splice(sourceIndex, 1);
+            if (resolvedSourceIndex === -1) return state;
+
+            const [movedTask] = sourceCol.splice(resolvedSourceIndex, 1);
+
+            if (!movedTask) return state;
+
             const updatedTask = { ...movedTask, status: destination };
             
             destCol.splice(destIndex, 0, updatedTask);

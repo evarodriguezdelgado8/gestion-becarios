@@ -3,7 +3,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Card } from '@/components/ui/card';
 
@@ -17,25 +17,62 @@ interface InternCalendarProps {
     liveNow: Date;
 }
 
+const normalizeDateKey = (value: string | Date | null | undefined) => {
+    if (!value) return '';
+
+    if (typeof value === 'string') {
+        return value.slice(0, 10);
+    }
+
+    return toDateKey(value);
+};
+
+const getInitialVisibleRange = () => {
+    const start = new Date();
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+
+    return { start, end };
+};
+
 export default function InternCalendar({ registries, schedules, absences, intern, liveNow }: InternCalendarProps) {
+    const [visibleRange, setVisibleRange] = useState(getInitialVisibleRange);
+
     const calendarEvents = useMemo(() => {
         const registryDates = new Set(registries.map((registry) => toDateKey(new Date(registry.check_in))));
-        const absenceDates = new Set(absences.filter((absence) => absence.date).map((absence) => absence.date));
+        const absenceDates = new Set(absences.filter((absence) => absence.date).map((absence) => normalizeDateKey(absence.date)));
+        const approvedAbsenceDates = new Set(
+            absences
+                .filter((absence) => absence.date && absence.status === 'approved')
+                .map((absence) => normalizeDateKey(absence.date)),
+        );
         const events: any[] = [];
 
-        (schedules || []).forEach((schedule) => {
-            events.push({
-                id: `schedule-${schedule.id ?? schedule.day_of_week}`,
-                title: `Previsto ${formatTime(schedule.start_time)}-${formatTime(schedule.end_time)}`,
-                daysOfWeek: [schedule.day_of_week === 7 ? 0 : schedule.day_of_week],
-                startTime: schedule.start_time,
-                endTime: schedule.end_time,
-                backgroundColor: '#eff6ff',
-                textColor: '#1e40af',
-                borderColor: '#bfdbfe',
-                display: 'block',
-            });
-        });
+        for (const cursor = new Date(visibleRange.start); cursor < visibleRange.end; cursor.setDate(cursor.getDate() + 1)) {
+            const dateKey = toDateKey(cursor);
+
+            if (approvedAbsenceDates.has(dateKey)) {
+                continue;
+            }
+
+            (schedules || [])
+                .filter((schedule) => Number(schedule.day_of_week) === getIsoWeekday(cursor))
+                .forEach((schedule) => {
+                    events.push({
+                        id: `schedule-${dateKey}-${schedule.id ?? schedule.day_of_week}`,
+                        title: `Previsto ${formatTime(schedule.start_time)}-${formatTime(schedule.end_time)}`,
+                        start: `${dateKey}T${schedule.start_time}`,
+                        end: `${dateKey}T${schedule.end_time}`,
+                        backgroundColor: '#eff6ff',
+                        textColor: '#1e40af',
+                        borderColor: '#bfdbfe',
+                        display: 'block',
+                    });
+                });
+        }
 
         registries.forEach((registry) => {
             const hours = registry.check_out ? formatDurationFromHours((new Date(registry.check_out).getTime() - new Date(registry.check_in).getTime()) / 3600000) : 'En curso';
@@ -79,7 +116,7 @@ export default function InternCalendar({ registries, schedules, absences, intern
 
         for (const cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
             const dateKey = toDateKey(cursor);
-            const schedule = schedules.find((item) => item.day_of_week === getIsoWeekday(cursor));
+            const schedule = schedules.find((item) => Number(item.day_of_week) === getIsoWeekday(cursor));
 
             if (!schedule || registryDates.has(dateKey) || absenceDates.has(dateKey)) {
                 continue;
@@ -102,7 +139,7 @@ export default function InternCalendar({ registries, schedules, absences, intern
         }
 
         return events;
-    }, [absences, intern, liveNow, registries, schedules]); //[absences, intern?.end_date, intern?.start_date, liveNow, registries, schedules]);
+    }, [absences, intern, liveNow, registries, schedules, visibleRange.end, visibleRange.start]); //[absences, intern?.end_date, intern?.start_date, liveNow, registries, schedules]);
 
     return (
         <Card className="overflow-hidden rounded-[32px] border-none bg-white p-8 shadow-xl">
@@ -113,6 +150,8 @@ export default function InternCalendar({ registries, schedules, absences, intern
                 .fc .fc-button-primary:hover { background-color: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
                 .fc .fc-button-active { background-color: #0f172a !important; border-color: #0f172a !important; color: #fff !important; }
                 .fc .fc-event { border-radius: 8px; padding: 2px 4px; border: 1px solid transparent; }
+                .fc .fc-timegrid-now-indicator-line { border-color: #ef4444; border-width: 2px 0 0; }
+                .fc .fc-timegrid-now-indicator-arrow { border-top-color: #ef4444; border-bottom-color: #ef4444; }
                 .fc-theme-standard td, .fc-theme-standard th { border-color: #f1f5f9; }
             `}</style>
 
@@ -122,7 +161,7 @@ export default function InternCalendar({ registries, schedules, absences, intern
                 headerToolbar={{
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth,timeGridWeek',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay',
                 }}
                 locales={[esLocale]}
                 locale={esLocale}
@@ -131,10 +170,25 @@ export default function InternCalendar({ registries, schedules, absences, intern
                     today: 'Hoy',
                     month: 'Mes',
                     week: 'Semana',
+                    day: 'Día',
                 }}
                 allDayText="Todo el día"
                 weekText="Sem."
                 events={calendarEvents}
+                now={liveNow}
+                nowIndicator
+                dateClick={(dateInfo) => {
+                    dateInfo.view.calendar.changeView('timeGridDay', dateInfo.dateStr);
+                }}
+                datesSet={(dateInfo) => {
+                    setVisibleRange((currentRange) => {
+                        if (currentRange.start.getTime() === dateInfo.start.getTime() && currentRange.end.getTime() === dateInfo.end.getTime()) {
+                            return currentRange;
+                        }
+
+                        return { start: dateInfo.start, end: dateInfo.end };
+                    });
+                }}
                 height="600px"
                 eventTimeFormat={{
                     hour: '2-digit',

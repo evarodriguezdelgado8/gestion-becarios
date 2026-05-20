@@ -87,11 +87,7 @@ export function ManagerHomePanel({
                 </div>
 
                 <div className="rounded-3xl border border-slate-100 bg-slate-50/70 p-5">
-                    <div className="mb-4 flex items-center gap-2">
-                        <ListFilter className="h-4 w-4 text-blue-500" />
-                        <h4 className="font-bold text-slate-900">Para entrar al detalle</h4>
-                    </div>
-                    <p className="text-sm font-medium text-slate-500">Usa los filtros superiores para ver fichajes, editar registros, asignar horarios o exportar partes de horas de un centro, ciclo o becario concreto.</p>
+                    <h4 className="font-bold text-slate-900">Fichajes hoy</h4>
                     <div className="mt-5 space-y-3">
                         {todayRegistries.slice(0, 4).map((registry: any) => (
                             <div key={registry.id} className="rounded-2xl bg-white p-3">

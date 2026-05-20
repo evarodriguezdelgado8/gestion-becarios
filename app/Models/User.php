@@ -13,6 +13,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Models\TimeRegistry;
 use App\Models\Schedule;
 use App\Models\Absence;
+use App\Models\Intern;
 
 class User extends Authenticatable implements MustVerifyEmail, HasMedia
 {
@@ -104,6 +105,14 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $this->hasMany(Absence::class);
     }
 
+    public function intern()
+    {
+        return $this->hasOne(Intern::class);
+    }
 
+    public function assignedInterns()
+    {
+        return $this->hasMany(Intern::class, 'tutor_id');
+    }
 
 }

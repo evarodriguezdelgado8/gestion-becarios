@@ -71,12 +71,8 @@ export default function BulkScheduleForm({ scheduleForm, eligibleBecarios, eligi
                         </div>
                     ))}
                 </div>
-                <div className="flex flex-col gap-3 rounded-2xl border border-amber-100 bg-amber-50 p-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                        <p className="text-sm font-black text-amber-900">Aplicación masiva</p>
-                        <p className="text-xs font-medium text-amber-700">Los días sin horas se borrarán del horario de referencia.</p>
-                    </div>
-                    <Button disabled={scheduleForm.processing || eligibleBecarioUserIds.length === 0} className="h-12 rounded-2xl bg-violet-600 px-8 font-bold text-white shadow-lg shadow-violet-100 hover:bg-violet-700">
+                <div>
+                    <Button disabled={scheduleForm.processing || eligibleBecarioUserIds.length === 0} className="h-12 rounded-2xl bg-violet-600 px-8 font-bold text-white shadow-lg shadow-violet-100 hover:bg-violet-700 float-right">
                         {scheduleForm.processing ? 'Aplicando...' : 'Aplicar horario'}
                     </Button>
                 </div>

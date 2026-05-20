@@ -28,6 +28,31 @@ interface ScheduleDays {
     [key: string]: DaySchedule;
 }
 
+const emptyScheduleDays = (): ScheduleDays => ({
+    '1': { start: '', end: '' },
+    '2': { start: '', end: '' },
+    '3': { start: '', end: '' },
+    '4': { start: '', end: '' },
+    '5': { start: '', end: '' },
+    '6': { start: '', end: '' },
+    '7': { start: '', end: '' },
+});
+
+const scheduleDaysFromBecario = (becario: any): ScheduleDays => {
+    const days = emptyScheduleDays();
+
+    (becario?.schedules || []).forEach((schedule: any) => {
+        const day = String(schedule.day_of_week);
+
+        days[day] = {
+            start: schedule.start_time?.slice(0, 5) || '',
+            end: schedule.end_time?.slice(0, 5) || '',
+        };
+    });
+
+    return days;
+};
+
 interface ManagerDashboardProps {
     becarios: any[];
     managerRegistries: any[];
@@ -53,6 +78,7 @@ export default function ManagerDashboard({
     openReviewAbsence,
     setDeletingRegistry,
 }: ManagerDashboardProps) {
+    const initialTab = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('tab') === 'horario' ? 'horario' : 'asistencia';
     const [selectedInterns, setSelectedInterns] = useState(filters.intern_id ? filters.intern_id.split(',') : []);
     const [selectedCenters, setSelectedCenters] = useState(filters.center_id ? filters.center_id.split(',') : []);
     const [selectedCycles, setSelectedCycles] = useState(filters.academic_cycle ? filters.academic_cycle.split(',') : []);
@@ -77,21 +103,15 @@ export default function ManagerDashboard({
 
     const scheduleForm = useForm<{ user_ids: number[]; days: ScheduleDays }>({
         user_ids: [],
-        days: {
-            '1': { start: '', end: '' },
-            '2': { start: '', end: '' },
-            '3': { start: '', end: '' },
-            '4': { start: '', end: '' },
-            '5': { start: '', end: '' },
-            '6': { start: '', end: '' },
-            '7': { start: '', end: '' },
-        },
+        days: emptyScheduleDays(),
     });
 
     const hasActiveFilters = selectedInterns.length > 0 || selectedCenters.length > 0 || selectedCycles.length > 0;
     const eligibleBecarios = becarios.filter((becario: any) => Boolean(becario.user_id));
     const eligibleBecarioUserIds = eligibleBecarios.map((becario: any) => becario.user_id);
     const hasActiveManagerRegistry = managerRegistries.some((registry: any) => !registry.check_out);
+    const selectedSingleBecario =
+        selectedInterns.length === 1 ? becarios.find((becario: any) => String(becario.id) === selectedInterns[0]) : null;
 
     useEffect(() => {
         if (!hasActiveManagerRegistry) {
@@ -103,6 +123,12 @@ export default function ManagerDashboard({
 
         return () => clearInterval(interval);
     }, [hasActiveManagerRegistry]);
+
+    useEffect(() => {
+        if (selectedSingleBecario) {
+            scheduleForm.setData('days', scheduleDaysFromBecario(selectedSingleBecario));
+        }
+    }, [selectedSingleBecario?.id]);
 
     const applyFilters = (newFilters: any) => {
         const params: any = {
@@ -266,8 +292,6 @@ export default function ManagerDashboard({
         return `${formatDurationFromHours(elapsedMs / 3600000)} en curso`;
     };
 
-    const selectedSingleBecario =
-        selectedInterns.length === 1 ? becarios.find((becario: any) => String(becario.id) === selectedInterns[0]) : null;
     const managerPdfInternId = selectedSingleBecario?.user_id ? selectedSingleBecario.id : pdfInternId;
     const todayAlertKey = toDateKey(new Date());
     const lateRegistries = managerRegistries.filter((registry: any) => registry.status === 'late');
@@ -444,7 +468,7 @@ export default function ManagerDashboard({
                         openReviewAbsence={openReviewAbsence}
                     />
 
-                    <Tabs defaultValue="asistencia" className="w-full space-y-6">
+                    <Tabs defaultValue={initialTab} className="w-full space-y-6">
                         <TabsList className="grid h-auto w-full grid-cols-4 rounded-2xl bg-slate-100 p-1.5 md:inline-flex md:w-auto">
                             <TabsTrigger value="asistencia" className="rounded-xl px-6 py-2 font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">
                                 <History className="mr-2 h-4 w-4" /> Asistencias
@@ -479,7 +503,7 @@ export default function ManagerDashboard({
                             />
                         </TabsContent>
 
-                        <TabsContent value="horario" className="animate-in fade-in duration-300">
+                        <TabsContent id="horarios" value="horario" className="animate-in scroll-mt-6 fade-in duration-300">
                             <BulkScheduleForm
                                 scheduleForm={scheduleForm}
                                 eligibleBecarios={eligibleBecarios}

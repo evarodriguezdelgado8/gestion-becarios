@@ -360,20 +360,29 @@ class TimeRegistryController extends Controller
                         continue;
                     }
 
-                    if (! empty($times['start']) && ! empty($times['end'])) {
-                        if ($times['end'] <= $times['start']) {
-                            throw ValidationException::withMessages([
-                                'schedules' => 'La hora de fin debe ser posterior a la hora de inicio.',
-                            ]);
-                        }
+                    $start = $times['start'] ?? null;
+                    $end = $times['end'] ?? null;
 
-                        $user->schedules()->updateOrCreate(
-                            ['day_of_week' => $dayNum],
-                            ['start_time' => $times['start'], 'end_time' => $times['end']],
-                        );
-                    } else {
-                        $user->schedules()->where('day_of_week', $dayNum)->delete();
+                    if (empty($start) && empty($end)) {
+                        continue;
                     }
+
+                    if (empty($start) || empty($end)) {
+                        throw ValidationException::withMessages([
+                            'schedules' => 'Completa entrada y salida para cada dÃ­a que quieras modificar.',
+                        ]);
+                    }
+
+                    if ($end <= $start) {
+                        throw ValidationException::withMessages([
+                            'schedules' => 'La hora de fin debe ser posterior a la hora de inicio.',
+                        ]);
+                    }
+
+                    $user->schedules()->updateOrCreate(
+                        ['day_of_week' => $dayNum],
+                        ['start_time' => $start, 'end_time' => $end],
+                    );
                 }
             }
         });

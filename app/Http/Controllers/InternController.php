@@ -15,14 +15,26 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class InternController extends Controller
 {
+    private function commaFilter(?string $value): array
+    {
+        if (!$value) {
+            return [];
+        }
+
+        return array_values(array_filter(explode(',', $value), fn ($item) => $item !== ''));
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
+        $centerIds = $this->commaFilter($request->input('center_id'));
+        $statuses = $this->commaFilter($request->input('status'));
+
         return Inertia::render('becarios/index', [
             'interns' => Intern::query()
-                ->with('center:id,name')
+                ->with(['center:id,name', 'tutor:id,name,email'])
                 ->when($request->input('search'), function ($query, $search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('name', 'ilike', "%{$search}%")
@@ -31,8 +43,8 @@ class InternController extends Controller
                             ->orWhere('email', 'ilike', "%{$search}%");
                     });
                 })
-                ->when($request->input('center_id'), fn ($q, $id) => $q->where('center_id', $id))
-                ->when($request->input('status'), fn ($q, $st) => $q->where('status', $st))
+                ->when($centerIds, fn ($q) => $q->whereIn('center_id', $centerIds))
+                ->when($statuses, fn ($q) => $q->whereIn('status', $statuses))
 
                 ->when($request->input('start_from'), fn ($q, $date) => $q->whereDate('start_date', '>=', $date))
                 ->when($request->input('start_to'), fn ($q, $date) => $q->whereDate('start_date', '<=', $date))
@@ -64,6 +76,7 @@ class InternController extends Controller
     {
         return inertia('becarios/create', [
             'centers' => Center::all(['id', 'name']),
+            'tutors' => User::role('tutor')->orderBy('name')->get(['id', 'name', 'email']),
         ]);
     }
 
@@ -107,7 +120,7 @@ class InternController extends Controller
      */
     public function show(Intern $intern)
     {
-        $intern->load(['center', 'user.schedules']);
+        $intern->load(['center', 'tutor:id,name,email', 'user.schedules']);
 
         return Inertia::render('becarios/show', [
             'intern' => $intern,
@@ -136,6 +149,7 @@ class InternController extends Controller
         return Inertia::render('becarios/edit', [
             'intern' => $intern,
             'centers' => Center::all(['id', 'name']),
+            'tutors' => User::role('tutor')->orderBy('name')->get(['id', 'name', 'email']),
             'current_documents' => [
                 'dni' => $intern->getFirstMediaUrl('dni_scan'),
                 'convenio' => $intern->getFirstMediaUrl('convenio'),

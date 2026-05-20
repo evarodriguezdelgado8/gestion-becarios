@@ -5,7 +5,7 @@ import {
     User, Mail, Building2, GraduationCap, 
     Edit2, Trash2, Plus,
     Copy, Check, Calendar as CalendarIcon, AlertCircle,
-    Phone, FileDown
+    Phone, FileDown, ChevronDown, SlidersHorizontal
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ import SearchInput from '@/components/common/SearchInput';
 // Importamos tus componentes de UI
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar"; 
+import { MultiSelect } from '@/components/ui/multi-select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import AppLayout from '@/layouts/app-layout'; 
 import { cn } from "@/lib/utils";
@@ -45,6 +46,12 @@ const statusMap: Record<string, { label: string; class: string }> = {
     'finished': { label: 'Finalizado', class: 'bg-blue-50 text-blue-700 border-blue-100' },
     'abandoned': { label: 'Abandonado', class: 'bg-rose-50 text-rose-700 border-rose-100' },
 };
+
+const statusOptions = [
+    { label: 'Activo', value: 'active' },
+    { label: 'Finalizado', value: 'finished' },
+    { label: 'Abandonado', value: 'abandoned' },
+];
 
 const FilterDatePicker = ({
     name,
@@ -93,6 +100,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
     const [copiedEmail, setCopiedEmail] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [internToDelete, setInternToDelete] = useState<Intern | null>(null);
+    const [filtersOpen, setFiltersOpen] = useState(false);
 
     const [params, setParams] = useState({
         search: filters.search || '',
@@ -103,6 +111,9 @@ export default function Index({ interns, filters, centers, flash }: Props) {
         end_from: filters.end_from || '',
         end_to: filters.end_to || '',
     });
+    const [selectedStatuses, setSelectedStatuses] = useState<string[]>(filters.status ? filters.status.split(',').filter(Boolean) : []);
+    const [selectedCenters, setSelectedCenters] = useState<string[]>(filters.center_id ? filters.center_id.split(',').filter(Boolean) : []);
+    const activeFiltersCount = Object.values(params).filter(Boolean).length;
 
     /*useEffect(() => {
         setParams({
@@ -148,6 +159,16 @@ export default function Index({ interns, filters, centers, flash }: Props) {
         }
     };
 
+    const handleStatusChange = (values: string[]) => {
+        setSelectedStatuses(values);
+        handleFilterChange('status', values.join(','));
+    };
+
+    const handleCenterChange = (values: string[]) => {
+        setSelectedCenters(values);
+        handleFilterChange('center_id', values.join(','));
+    };
+
     const resetFilters = () => {
         const empty = { 
             search: '', status: '', center_id: '', 
@@ -155,6 +176,8 @@ export default function Index({ interns, filters, centers, flash }: Props) {
             end_from: '', end_to: '' 
         };
         setParams(empty);
+        setSelectedStatuses([]);
+        setSelectedCenters([]);
         router.get('/becarios', empty);
     };
 
@@ -215,7 +238,10 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                         ) : <span className="text-sm font-normal italic text-slate-400">Sin centro</span>}
                     </div>
                     <div className="ml-6 flex items-center gap-1.5 text-[12px] font-black uppercase text-slate-400">
-                        <User className="h-3.5 w-3.5 text-slate-400" /> {becario.academic_tutor || 'Sin tutor'}
+                        <User className="h-3.5 w-3.5 text-slate-400" /> {becario.tutor?.name || 'Sin tutor asignado'}
+                    </div>
+                    <div className="ml-6 text-[11px] font-semibold text-slate-400">
+                        Centro: {becario.academic_tutor || 'Sin tutor académico'}
                     </div>
                     <div className="ml-6 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
                         <GraduationCap className="h-4 w-4 text-slate-400" /> {becario.academic_cycle || 'N/A'}
@@ -268,7 +294,30 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                     </div>
                 </div>
 
-                <div className="space-y-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xl">
+                <div className="rounded-3xl border border-slate-200/80 bg-white shadow-xl">
+                    <div className="flex flex-col justify-between gap-3 px-5 py-4 md:flex-row md:items-center">
+                        <button type="button" onClick={() => setFiltersOpen((current) => !current)} className="flex items-center gap-3 text-left">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                                <SlidersHorizontal className="h-5 w-5" />
+                            </span>
+                            <span>
+                                <span className="block text-sm font-black text-slate-900">Filtros</span>
+                                <span className="block text-xs font-semibold text-slate-400">
+                                    {activeFiltersCount > 0 ? `${activeFiltersCount} filtro(s) activo(s)` : 'Pulsa para filtrar el listado'}
+                                </span>
+                            </span>
+                        </button>
+
+                        <div className="flex items-center justify-end gap-2">
+                            {activeFiltersCount > 0 && <ClearFiltersButton onClick={resetFilters} />}
+                            <button type="button" onClick={() => setFiltersOpen((current) => !current)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50">
+                                <ChevronDown className={`h-4 w-4 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {filtersOpen && (
+                        <div className="space-y-4 border-t border-slate-100 px-5 pb-5 pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                         <div className="md:col-span-6">
                             <label className="mb-1 block text-[10px] font-black uppercase text-slate-400">Búsqueda</label>
@@ -280,29 +329,21 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                         </div>
                         <div className="md:col-span-3">
                             <label className="mb-1 block text-[10px] font-black uppercase text-slate-400">Estado</label>
-                            <select 
-                                name="status" 
-                                value={params.status} 
-                                onChange={(e) => handleFilterChange('status', e.target.value)} 
-                                className="h-[38px] w-full cursor-pointer rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">Todos</option>
-                                <option value="active">Activo</option>
-                                <option value="finished">Finalizado</option>
-                                <option value="abandoned">Abandonado</option>
-                            </select>
+                            <MultiSelect
+                                options={statusOptions}
+                                selected={selectedStatuses}
+                                onChange={handleStatusChange}
+                                placeholder="Todos los estados"
+                            />
                         </div>
                         <div className="md:col-span-3">
                             <label className="mb-1 block text-[10px] font-black uppercase text-slate-400">Centro</label>
-                            <select 
-                                name="center_id" 
-                                value={params.center_id} 
-                                onChange={(e) => handleFilterChange('center_id', e.target.value)} 
-                                className="h-[38px] w-full cursor-pointer rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">Todos los centros</option>
-                                {centers?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
+                            <MultiSelect
+                                options={centers?.map((center) => ({ label: center.name, value: center.id.toString() })) ?? []}
+                                selected={selectedCenters}
+                                onChange={handleCenterChange}
+                                placeholder="Todos los centros"
+                            />
                         </div>
                     </div>
 
@@ -318,6 +359,8 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                             <ClearFiltersButton onClick={resetFilters} className="h-[38px] w-full" />
                         </div>
                     </div>
+                        </div>
+                    )}
                 </div>
 
                 <DataTable 

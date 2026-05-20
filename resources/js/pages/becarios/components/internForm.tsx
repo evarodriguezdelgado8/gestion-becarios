@@ -16,6 +16,7 @@ interface Props {
     errors: any;
     processing: boolean;
     centers: Center[];
+    tutors: { id: number; name: string; email?: string }[];
     submitText: string;
     isEdit?: boolean;
 }
@@ -53,7 +54,7 @@ const DatePickerField = ({ value, onChange, error }: { value: string, onChange: 
     </Popover>
 );
 
-export default function InternForm({ data, setData, errors, processing, centers, submitText, isEdit }: Props) {
+export default function InternForm({ data, setData, errors, processing, centers, tutors, submitText, isEdit }: Props) {
     
     const inputClasses = (error: string) => `
         w-full px-4 py-2.5 bg-white border rounded-lg shadow-sm transition-all duration-200
@@ -146,6 +147,17 @@ export default function InternForm({ data, setData, errors, processing, centers,
                             <option value="DAW">DAW (Desarrollo de Aplicaciones Web)</option>
                         </select>
                         {errors.academic_cycle && <p className="text-red-500 text-xs mt-1 italic">{errors.academic_cycle}</p>}
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label required>Tutor asignado</Label>
+                        <select value={data.tutor_id} onChange={e => setData('tutor_id', e.target.value)} className={interactiveClasses(errors.tutor_id)}>
+                            <option value="">Seleccione un tutor</option>
+                            {tutors.map(tutor => (
+                                <option key={tutor.id} value={tutor.id}>{tutor.name}{tutor.email ? ` (${tutor.email})` : ''}</option>
+                            ))}
+                        </select>
+                        {errors.tutor_id && <p className="text-red-500 text-xs mt-1 italic">{errors.tutor_id}</p>}
                     </div>
 
                     <div className="space-y-1.5">

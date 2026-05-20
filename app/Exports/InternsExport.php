@@ -17,6 +17,15 @@ class InternsExport implements FromQuery, WithMapping, WithHeadings, ShouldAutoS
         $this->filters = $filters;
     }
 
+    private function commaFilter(?string $value): array
+    {
+        if (!$value) {
+            return [];
+        }
+
+        return array_values(array_filter(explode(',', $value), fn ($item) => $item !== ''));
+    }
+
     public function query()
     {
         $query = Intern::query()->with('center:id,name');
@@ -31,21 +40,27 @@ class InternsExport implements FromQuery, WithMapping, WithHeadings, ShouldAutoS
             });
         }
 
-        // Filtro por Centro
-        if (!empty($this->filters['center_id'])) {
-            $query->where('center_id', $this->filters['center_id']);
+        $centerIds = $this->commaFilter($this->filters['center_id'] ?? null);
+        if ($centerIds) {
+            $query->whereIn('center_id', $centerIds);
         }
 
-        // Filtro por Estado
-        if (!empty($this->filters['status'])) {
-            $query->where('status', $this->filters['status']);
+        $statuses = $this->commaFilter($this->filters['status'] ?? null);
+        if ($statuses) {
+            $query->whereIn('status', $statuses);
         }
 
-        if (!empty($this->filters['from'])) {
-            $query->whereDate('start_date', '>=', $this->filters['from']);
+        if (!empty($this->filters['start_from'])) {
+            $query->whereDate('start_date', '>=', $this->filters['start_from']);
         }
-        if (!empty($this->filters['to'])) {
-            $query->whereDate('end_date', '<=', $this->filters['to']);
+        if (!empty($this->filters['start_to'])) {
+            $query->whereDate('start_date', '<=', $this->filters['start_to']);
+        }
+        if (!empty($this->filters['end_from'])) {
+            $query->whereDate('end_date', '>=', $this->filters['end_from']);
+        }
+        if (!empty($this->filters['end_to'])) {
+            $query->whereDate('end_date', '<=', $this->filters['end_to']);
         }
 
         return $query->latest();

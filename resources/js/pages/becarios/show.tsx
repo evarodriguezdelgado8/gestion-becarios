@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { 
     User, BookOpen, Calendar, 
     ArrowLeft, Download, FileText, 
@@ -37,6 +37,19 @@ const WEEK_DAYS: Record<number, string> = {
 };
 
 export default function Show({ intern, schedules, documents }: Props) {
+    const { auth } = usePage().props as any;
+    const isAdmin = auth.user?.roles?.some((role: any) => {
+        const roleName = typeof role === 'object' ? role.name : role;
+
+        return roleName?.toLowerCase().includes('admin');
+    });
+    const isTutor = auth.user?.roles?.some((role: any) => {
+        const roleName = typeof role === 'object' ? role.name : role;
+
+        return roleName?.toLowerCase().includes('tutor');
+    });
+    const canManageSchedule = isAdmin || isTutor;
+
     const formatDate = (dateString: string | null) => {
         if (!dateString) return null;
         const date = new Date(dateString);
@@ -112,14 +125,24 @@ export default function Show({ intern, schedules, documents }: Props) {
                         </div>
                     </div>
 
-                    <div className="flex-shrink-0">
-                        <Link 
-                            href={`/becarios/${intern.id}/edit`} 
-                            className="whitespace-nowrap px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-sm active:scale-95 text-sm"
-                        >
-                            Editar Perfil
-                        </Link>
-                    </div>
+                    {canManageSchedule && (
+                        <div className="flex flex-shrink-0 flex-wrap justify-end gap-2">
+                            <Link
+                                href={`/control-horario?intern_id=${intern.id}&tab=horario#horarios`}
+                                className="inline-flex whitespace-nowrap rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95"
+                            >
+                                {hasSchedules ? 'Editar horario' : 'Añadir horario'}
+                            </Link>
+                            {isAdmin && (
+                            <Link
+                                href={`/becarios/${intern.id}/edit`}
+                                className="whitespace-nowrap px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-sm active:scale-95 text-sm"
+                            >
+                                Editar Perfil
+                            </Link>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -203,8 +226,16 @@ export default function Show({ intern, schedules, documents }: Props) {
                                 <div className="flex items-start gap-3">
                                     <User className="w-5 h-5 text-gray-400 mt-1" />
                                     <div>
+                                        <p className="font-bold text-gray-900">{intern.tutor?.name || 'No asignado'}</p>
+                                        {intern.tutor?.email && <p className="text-xs font-medium text-gray-500">{intern.tutor.email}</p>}
+                                        <p className="text-[10px] text-gray-400 uppercase font-bold">Tutor asignado</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <User className="w-5 h-5 text-gray-400 mt-1" />
+                                    <div>
                                         <p className="font-bold text-gray-900">{intern.academic_tutor || 'No asignado'}</p>
-                                        <p className="text-[10px] text-gray-400 uppercase font-bold">Tutor Académico</p>
+                                        <p className="text-[10px] text-gray-400 uppercase font-bold">Tutor académico</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">

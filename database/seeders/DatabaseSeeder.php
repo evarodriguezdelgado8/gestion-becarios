@@ -26,13 +26,6 @@ class DatabaseSeeder extends Seeder
         ]);
         $admin->assignRole('admin');
 
-        $tutor = User::factory()->create([
-            'name' => 'Tutor Prueba',
-            'email' => 'tutor@ejemplo.com',
-            'password' => bcrypt('12345678'),
-        ]);
-        $tutor->assignRole('tutor');
-
         $centers = Center::factory(20)->create();
 
         $internUser = User::factory()->create([
@@ -65,5 +58,7 @@ class DatabaseSeeder extends Seeder
                 $intern->save();
             });
         });
+
+        $this->call([TutorAssignmentSeeder::class]);
     }
 }

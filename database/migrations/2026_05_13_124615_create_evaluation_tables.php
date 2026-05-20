@@ -34,6 +34,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('evaluation_tables');
+        Schema::dropIfExists('evaluation_criteria');
+        Schema::dropIfExists('evaluation_categories');
     }
 };

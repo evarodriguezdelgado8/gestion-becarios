@@ -14,7 +14,7 @@ class Intern extends Model implements HasMedia
     use HasFactory, SoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
-        'user_id','center_id', 'name', 'last_name', 'dni', 'email', 'phone', 
+        'user_id', 'tutor_id', 'center_id', 'name', 'last_name', 'dni', 'email', 'phone',
         'address', 'status', 'start_date', 'end_date', 
         'academic_cycle', 'academic_tutor', 'total_hours', 'completed_hours'
     ];
@@ -50,5 +50,10 @@ class Intern extends Model implements HasMedia
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function tutor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'tutor_id');
     }
 }

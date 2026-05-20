@@ -5,9 +5,10 @@ import InternForm from './components/internForm';
 
 interface Props {
     centers: Center[];
+    tutors: { id: number; name: string; email?: string }[];
 }
 
-export default function Create({ centers }: Props) {
+export default function Create({ centers, tutors }: Props) {
     const { data, setData, post, processing, errors } = useForm<InternFormData>({
         name: '',
         last_name: '',
@@ -16,6 +17,7 @@ export default function Create({ centers }: Props) {
         phone: '',
         address: '',
         center_id: '',
+        tutor_id: '',
         academic_cycle: '',
         academic_tutor: '',
         start_date: '',
@@ -50,6 +52,7 @@ export default function Create({ centers }: Props) {
                             errors={errors}
                             processing={processing}
                             centers={centers}
+                            tutors={tutors}
                             submitText="Crear Becario"
                         />
                     </form>
