@@ -67,7 +67,8 @@ const formatDate = (date?: string) => {
 };
 
 const gradeOutOf10 = (grade: number | string) => Number(grade || 0) * 2;
-const formatFinalGrade = (grade: number | string) => `${gradeOutOf10(grade).toFixed(1)} / 10`;
+const formatGradeNumber = (grade: number) => (Number.isInteger(grade) ? String(grade) : grade.toFixed(1));
+const formatFinalGrade = (grade: number | string) => `${formatGradeNumber(gradeOutOf10(grade))} / 10`;
 const getFinalGradeClass = (grade: number | string) => (gradeOutOf10(grade) < 5 ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700');
 
 export default function HistoryPage({ becarios, evaluaciones }: Props) {
@@ -120,7 +121,7 @@ export default function HistoryPage({ becarios, evaluaciones }: Props) {
     const average =
         filteredEvaluations.length > 0
             ? formatFinalGrade(filteredEvaluations.reduce((total, evaluation) => total + Number(evaluation.final_grade || 0), 0) / filteredEvaluations.length)
-            : '0.0 / 10';
+            : '0 / 10';
     const bestEvaluation = filteredEvaluations.reduce<Evaluation | null>((best, evaluation) => {
         if (!best) return evaluation;
         return Number(evaluation.final_grade) > Number(best.final_grade) ? evaluation : best;
@@ -181,7 +182,7 @@ export default function HistoryPage({ becarios, evaluaciones }: Props) {
                     />
                     <SummaryCard
                         label="Evolución"
-                        value={shouldShowEvolution ? `${trend >= 0 ? '+' : ''}${trend.toFixed(1)}` : 'Sin datos'}
+                        value={shouldShowEvolution ? `${trend >= 0 ? '+' : ''}${formatGradeNumber(trend)}` : 'Sin datos'}
                         icon={<TrendingUp className="h-5 w-5" />}
                         iconClass={shouldShowEvolution && trend < 0 ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'}
                     />
@@ -255,7 +256,7 @@ export default function HistoryPage({ becarios, evaluaciones }: Props) {
                                         </div>
                                         <div className="flex items-center justify-start md:justify-end">
                                             <div className="flex items-center gap-2">
-                                                <div className={`rounded-2xl px-4 py-3 text-lg font-black ${getFinalGradeClass(evaluation.final_grade)}`}>
+                                                <div className={`rounded-2xl px-3 py-2 text-sm font-black ${getFinalGradeClass(evaluation.final_grade)}`}>
                                                     {formatFinalGrade(evaluation.final_grade)}
                                                 </div>
                                                 <a
@@ -413,11 +414,11 @@ function EvolutionChart({ evaluations }: { evaluations: Evaluation[] }) {
                                 <div
                                     className="w-full rounded-t-xl bg-blue-500 transition-all"
                                     style={{ height: `${height}%` }}
-                                    title={`${getEvaluationInternName(evaluation)} · ${grade.toFixed(1)} / 10`}
+                                    title={`${getEvaluationInternName(evaluation)} · ${formatGradeNumber(grade)} / 10`}
                                 />
                             </div>
                             <div className="text-center">
-                                <p className="text-xs font-black text-slate-800">{grade.toFixed(1)}</p>
+                                <p className="text-xs font-black text-slate-800">{formatGradeNumber(grade)}</p>
                                 <p className="truncate text-[10px] font-semibold text-slate-400">{formatDate(evaluation.created_at)}</p>
                             </div>
                         </div>

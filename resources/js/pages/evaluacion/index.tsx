@@ -62,7 +62,8 @@ const formatDate = (date?: string) => {
     });
 };
 
-const formatFinalGrade = (grade: number | string) => `${(Number(grade || 0) * 2).toFixed(1)} / 10`;
+const formatGradeNumber = (grade: number) => (Number.isInteger(grade) ? String(grade) : grade.toFixed(1));
+const formatFinalGrade = (grade: number | string) => `${formatGradeNumber(Number(grade || 0) * 2)} / 10`;
 const getFinalGradeClass = (grade: number | string) => (Number(grade || 0) * 2 < 5 ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700');
 
 export default function Index({ becarios, evaluacionesRecientes, evaluacionesCount, evaluacionesMedia, canConfigureCriteria = false }: Props) {

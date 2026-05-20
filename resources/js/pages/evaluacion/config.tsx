@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ArrowLeft, Check, ClipboardList, Edit2, Layers3, Plus, Scale, Trash2, X } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ interface Criterion {
 
 interface Category {
     id: number;
+    evaluation_type?: string | null;
     name: string;
     description?: string | null;
     criteria: Criterion[];
@@ -48,6 +49,8 @@ const rubricLevels = [
     { value: '5', label: '5', placeholder: 'Excelente: desempeño sobresaliente y constante...' },
 ] as const;
 
+const categoriesPerPage = 5;
+
 const blankRubric = (): Rubric => ({ '1': '', '2': '', '3': '', '4': '', '5': '' });
 
 const normalizeRubric = (rubric?: Record<string, string> | string[] | null): Rubric => {
@@ -61,6 +64,7 @@ const normalizeRubric = (rubric?: Record<string, string> | string[] | null): Rub
 };
 
 const getCriterionType = (criterion: Criterion) => criterion.evaluation_type || 'weekly';
+const getCategoryType = (category: Category) => category.evaluation_type || 'weekly';
 
 const getRubricEntries = (rubric?: Record<string, string> | string[] | null) =>
     rubricLevels
@@ -74,15 +78,20 @@ export default function Config({ categories }: { categories: Category[] }) {
     const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
     const [editingCriterionId, setEditingCriterionId] = useState<number | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<{ type: 'category' | 'criterion'; id: number; name: string } | null>(null);
+    const [categoryTypeFilter, setCategoryTypeFilter] = useState('all');
+    const [categoriesPage, setCategoriesPage] = useState(1);
+    const [managedCategoryId, setManagedCategoryId] = useState<number | null>(null);
 
     const categoryForm = useForm({
         name: '',
         description: '',
+        evaluation_type: 'weekly',
     });
 
     const categoryEditForm = useForm({
         name: '',
         description: '',
+        evaluation_type: 'weekly',
     });
 
     const criterionForm = useForm({
@@ -119,14 +128,17 @@ export default function Config({ categories }: { categories: Category[] }) {
         });
     };
 
-    const startEditCategory = (category: Category) => {
+    const openCategoryManager = (category: Category) => {
         setEditingCriterionId(null);
         setEditingCategoryId(category.id);
+        setManagedCategoryId(category.id);
         categoryEditForm.setData({
             name: category.name,
             description: category.description ?? '',
+            evaluation_type: getCategoryType(category),
         });
     };
+    const startEditCategory = openCategoryManager;
 
     const submitCategoryEdit = (event: React.FormEvent, categoryId: number) => {
         event.preventDefault();
@@ -175,23 +187,42 @@ export default function Config({ categories }: { categories: Category[] }) {
 
         router.delete(url, {
             preserveScroll: true,
-            onSuccess: () => setDeleteTarget(null),
+            onSuccess: () => {
+                if (deleteTarget.type === 'category') {
+                    setManagedCategoryId(null);
+                }
+
+                setDeleteTarget(null);
+                setEditingCriterionId(null);
+            },
         });
     };
 
-    const weightsByType = evaluationTypes.map((type) => ({
-        ...type,
-        weight: categories.reduce(
-            (total, category) =>
-                total +
-                category.criteria
-                    .filter((criterion) => getCriterionType(criterion) === type.value)
-                    .reduce((sum, criterion) => sum + Number(criterion.weight), 0),
-            0,
-        ),
-    }));
-    const selectedTypeWeight = weightsByType.find((type) => type.value === criterionForm.data.evaluation_type)?.weight ?? 0;
+    const selectedCategory = categories.find((category) => String(category.id) === criterionForm.data.evaluation_category_id);
+    const selectedCategoryWeight = selectedCategory?.criteria.reduce((sum, criterion) => sum + Number(criterion.weight), 0) ?? 0;
+    const selectedCategoryProjectedWeight = selectedCategoryWeight + Number(criterionForm.data.weight || 0);
     const criteriaCount = categories.reduce((total, category) => total + category.criteria.length, 0);
+    const categoriesByType = evaluationTypes.map((type) => ({
+        ...type,
+        count: categories.filter((category) => getCategoryType(category) === type.value).length,
+    }));
+    const filteredCategories = useMemo(
+        () => (categoryTypeFilter === 'all' ? categories : categories.filter((category) => getCategoryType(category) === categoryTypeFilter)),
+        [categories, categoryTypeFilter],
+    );
+    const totalCategoryPages = Math.max(1, Math.ceil(filteredCategories.length / categoriesPerPage));
+    const paginatedCategories = filteredCategories.slice((categoriesPage - 1) * categoriesPerPage, categoriesPage * categoriesPerPage);
+    const managedCategory = categories.find((category) => category.id === managedCategoryId);
+
+    useEffect(() => {
+        setCategoriesPage(1);
+    }, [categoryTypeFilter, categories.length]);
+
+    useEffect(() => {
+        if (categoriesPage > totalCategoryPages) {
+            setCategoriesPage(totalCategoryPages);
+        }
+    }, [categoriesPage, totalCategoryPages]);
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Evaluación y Notas', href: '/evaluaciones' }, { title: 'Configuración', href: '/evaluaciones/configuracion' }]}>
@@ -207,9 +238,7 @@ export default function Config({ categories }: { categories: Category[] }) {
                         <h1 className="text-2xl font-bold text-slate-900">Configuración de criterios</h1>
                     </div>
 
-                    <div className={`rounded-2xl px-4 py-3 text-sm font-black ${selectedTypeWeight === 100 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                        Peso {typeLabels[criterionForm.data.evaluation_type]}: {selectedTypeWeight}% / 100%
-                    </div>
+                    
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -218,16 +247,14 @@ export default function Config({ categories }: { categories: Category[] }) {
                     <Card className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-[11px] font-black uppercase text-slate-400">Pesos por tipo</p>
+                                <p className="text-[11px] font-black uppercase text-slate-400">Categorias por tipo</p>
                                 <div className="mt-2 flex flex-wrap gap-2">
-                                    {weightsByType.map((type) => (
+                                    {categoriesByType.map((type) => (
                                         <span
                                             key={type.value}
-                                            className={`rounded-full px-2.5 py-1 text-xs font-black ${
-                                                type.weight === 100 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-                                            }`}
+                                            className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-700"
                                         >
-                                            {type.label}: {type.weight}%
+                                            {type.label}: {type.count}
                                         </span>
                                     ))}
                                 </div>
@@ -252,25 +279,44 @@ export default function Config({ categories }: { categories: Category[] }) {
                     </div>
 
                     <Card className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div className="mb-5 flex flex-col justify-between gap-2 md:flex-row md:items-center">
+                        <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
                             <div>
-                                <h2 className="text-lg font-black text-slate-900">Criterios configurados</h2>
-                                <p className="text-sm text-slate-500">Cada tipo de evaluación debe sumar 100% con sus propios criterios.</p>
+                                <h2 className="text-lg font-black text-slate-900">Competencias configuradas</h2>
+                                <p className="text-sm text-slate-500">Cada competencia puede sumar hasta 100% con sus criterios.</p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {[{ value: 'all', label: 'Todas' }, ...evaluationTypes].map((type) => {
+                                    const isActive = categoryTypeFilter === type.value;
+
+                                    return (
+                                        <button
+                                            key={type.value}
+                                            type="button"
+                                            onClick={() => setCategoryTypeFilter(type.value)}
+                                            className={`rounded-xl px-3 py-2 text-xs font-black transition ${
+                                                isActive
+                                                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
+                                                    : 'border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700'
+                                            }`}
+                                        >
+                                            {type.label}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
-                        {categories.length === 0 ? (
+                        {filteredCategories.length === 0 ? (
                             <div className="flex min-h-[280px] flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 p-8 text-center">
                                 <ClipboardList className="mb-3 h-7 w-7 text-slate-300" />
-                                <p className="font-black text-slate-800">Todavía no hay criterios</p>
-                                <p className="mt-1 text-sm text-slate-500">Crea una categoría y añade criterios para empezar.</p>
+                                <p className="font-black text-slate-800">Todavía no hay competencias</p>
+                                <p className="mt-1 text-sm text-slate-500">Crea una categoría o cambia el filtro para ver otras competencias.</p>
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {categories.map((category) => {
+                                {paginatedCategories.map((category) => {
                                     const categoryWeight = category.criteria.reduce((sum, criterion) => sum + Number(criterion.weight), 0);
-                                    const isEditingCategory = editingCategoryId === category.id;
-
+                                    const isEditingCategory = false;
                                     return (
                                         <div key={category.id} className="overflow-hidden rounded-2xl border border-slate-200">
                                             <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
@@ -281,6 +327,13 @@ export default function Config({ categories }: { categories: Category[] }) {
                                                             onChange={(event) => categoryEditForm.setData('name', event.target.value)}
                                                             className="h-10 rounded-xl border-slate-200 bg-white"
                                                         />
+                                                        <SelectField label="Tipo de evaluacion" value={categoryEditForm.data.evaluation_type} onChange={(value) => categoryEditForm.setData('evaluation_type', value)}>
+                                                            {evaluationTypes.map((type) => (
+                                                                <option key={type.value} value={type.value}>
+                                                                    {type.label}
+                                                                </option>
+                                                            ))}
+                                                        </SelectField>
                                                         <textarea
                                                             value={categoryEditForm.data.description}
                                                             onChange={(event) => categoryEditForm.setData('description', event.target.value)}
@@ -297,19 +350,22 @@ export default function Config({ categories }: { categories: Category[] }) {
                                                         </div>
                                                     </form>
                                                 ) : (
-                                                    <div className="flex items-start justify-between gap-3">
+                                                    <div className="flex items-center justify-between gap-3">
                                                         <div>
                                                             <p className="font-black text-slate-900">{category.name}</p>
+                                                            <span className="mt-1 inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black uppercase text-blue-700">
+                                                                {typeLabels[getCategoryType(category)]}
+                                                            </span>
                                                             {category.description && <p className="mt-1 text-sm text-slate-500">{category.description}</p>}
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 shadow-sm">{categoryWeight}%</span>
-                                                            <button onClick={() => startEditCategory(category)} className="rounded-xl bg-blue-600 p-2 text-white shadow-sm transition hover:bg-blue-700" title="Editar categoría">
+                                                            <button onClick={() => startEditCategory(category)} className="rounded-xl bg-blue-50 p-2 text-blue-600 transition hover:bg-blue-100 hover:text-blue-700" title="Editar categoría">
                                                                 <Edit2 className="h-4 w-4" />
                                                             </button>
                                                             <button
                                                                 onClick={() => setDeleteTarget({ type: 'category', id: category.id, name: category.name })}
-                                                                className="rounded-xl bg-red-600 p-2 text-white shadow-sm transition hover:bg-red-700"
+                                                                className="rounded-xl bg-rose-50 p-2 text-red-600 transition hover:bg-red-100 hover:text-red-700"
                                                                 title="Eliminar categoría"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
@@ -324,7 +380,7 @@ export default function Config({ categories }: { categories: Category[] }) {
                                             ) : (
                                                 <div className="divide-y divide-slate-100">
                                                     {category.criteria.map((criterion) =>
-                                                        editingCriterionId === criterion.id ? (
+                                                        false && editingCriterionId === criterion.id ? (
                                                             <div key={criterion.id} className="bg-slate-50/60 px-4 py-4">
                                                                 <CriterionFormCard
                                                                     categories={categories}
@@ -333,6 +389,7 @@ export default function Config({ categories }: { categories: Category[] }) {
                                                                     updateRubric={updateEditRubric}
                                                                     submitLabel="Guardar cambios"
                                                                     onCancel={() => setEditingCriterionId(null)}
+                                                                    editingCriterionId={editingCriterionId}
                                                                     compact
                                                                 />
                                                             </div>
@@ -341,9 +398,6 @@ export default function Config({ categories }: { categories: Category[] }) {
                                                                 <div className="min-w-0">
                                                                     <div className="flex flex-wrap items-center gap-2">
                                                                         <p className="font-bold text-slate-800">{criterion.name}</p>
-                                                                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black uppercase text-blue-700">
-                                                                            {typeLabels[getCriterionType(criterion)]}
-                                                                        </span>
                                                                         <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 shadow-sm">
                                                                             {criterion.weight}%
                                                                         </span>
@@ -360,13 +414,13 @@ export default function Config({ categories }: { categories: Category[] }) {
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                                <div className="flex items-start gap-2">
-                                                                    <button onClick={() => startEditCriterion(criterion, category.id)} className="rounded-xl bg-blue-600 p-2 text-white shadow-sm transition hover:bg-blue-700" title="Editar criterio">
+                                                                <div className="hidden">
+                                                                    <button onClick={() => startEditCriterion(criterion, category.id)} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700" title="Editar criterio">
                                                                         <Edit2 className="h-4 w-4" />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => setDeleteTarget({ type: 'criterion', id: criterion.id, name: criterion.name })}
-                                                                        className="rounded-xl bg-red-600 p-2 text-white shadow-sm transition hover:bg-red-700"
+                                                                        className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
                                                                         title="Eliminar criterio"
                                                                     >
                                                                         <Trash2 className="h-4 w-4" />
@@ -380,6 +434,31 @@ export default function Config({ categories }: { categories: Category[] }) {
                                         </div>
                                     );
                                 })}
+                                {totalCategoryPages > 1 && (
+                                    <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/70 px-4 py-4 text-sm md:flex-row">
+                                        <p className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-500 shadow-sm ring-1 ring-slate-100">
+                                            Pagina {categoriesPage} de {totalCategoryPages}
+                                        </p>
+                                        <div className="inline-flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                                            <button
+                                                type="button"
+                                                onClick={() => setCategoriesPage((page) => Math.max(1, page - 1))}
+                                                disabled={categoriesPage === 1}
+                                                className="cursor-pointer border-r border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                            >
+                                                Anterior
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setCategoriesPage((page) => Math.min(totalCategoryPages, page + 1))}
+                                                disabled={categoriesPage === totalCategoryPages}
+                                                className="cursor-pointer px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                            >
+                                                Siguiente
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </Card>
@@ -393,6 +472,135 @@ export default function Config({ categories }: { categories: Category[] }) {
                 title={deleteTarget?.type === 'category' ? '¿Eliminar categoría?' : '¿Eliminar criterio?'}
                 itemName={deleteTarget?.name}
             />
+
+            {managedCategory && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+                    <div className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+                        <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-slate-50 px-6 py-5">
+                            <div>
+                                <p className="text-[11px] font-black uppercase text-slate-400">Gestionar categoria</p>
+                                <h2 className="mt-1 text-xl font-black text-slate-900">{managedCategory.name}</h2>
+                                <p className="mt-1 text-sm text-slate-500">Edita la categoria y administra sus criterios desde aqui.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setManagedCategoryId(null);
+                                    setEditingCriterionId(null);
+                                    setEditingCategoryId(null);
+                                }}
+                                className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:text-slate-900"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <div className="max-h-[calc(90vh-92px)] space-y-6 overflow-y-auto p-6">
+                            <form onSubmit={(event) => submitCategoryEdit(event, managedCategory.id)} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label className="text-[11px] font-black uppercase text-slate-400">Nombre</Label>
+                                        <Input
+                                            value={categoryEditForm.data.name}
+                                            onChange={(event) => categoryEditForm.setData('name', event.target.value)}
+                                            className="h-10 rounded-xl border-slate-200 bg-white"
+                                        />
+                                    </div>
+                                    <SelectField label="Tipo de evaluacion" value={categoryEditForm.data.evaluation_type} onChange={(value) => categoryEditForm.setData('evaluation_type', value)}>
+                                        {evaluationTypes.map((type) => (
+                                            <option key={type.value} value={type.value}>
+                                                {type.label}
+                                            </option>
+                                        ))}
+                                    </SelectField>
+                                </div>
+                                <div className="mt-4 space-y-2">
+                                    <Label className="text-[11px] font-black uppercase text-slate-400">Descripcion</Label>
+                                    <textarea
+                                        value={categoryEditForm.data.description}
+                                        onChange={(event) => categoryEditForm.setData('description', event.target.value)}
+                                        className="min-h-20 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
+                                        placeholder="Opcional"
+                                    />
+                                </div>
+                                <div className="mt-4 flex justify-end">
+                                    <Button type="submit" disabled={categoryEditForm.processing} className="h-10 rounded-xl font-bold">
+                                        <Check className="h-4 w-4" />
+                                        Guardar categoria
+                                    </Button>
+                                </div>
+                            </form>
+
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <h3 className="font-black text-slate-900">Criterios de la categoría</h3>
+                                        <p className="text-sm text-slate-500">Puedes editar o borrar criterios.</p>
+                                    </div>
+                                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+                                        {managedCategory.criteria.reduce((sum, criterion) => sum + Number(criterion.weight), 0)}% / 100%
+                                    </span>
+                                </div>
+
+                                {managedCategory.criteria.length === 0 ? (
+                                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-400">
+                                        Esta competencia todavia no tiene criterios.
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200">
+                                        {managedCategory.criteria.map((criterion) =>
+                                            editingCriterionId === criterion.id ? (
+                                                <div key={criterion.id} className="bg-slate-50/70 p-4">
+                                                    <CriterionFormCard
+                                                        categories={categories}
+                                                        form={criterionEditForm}
+                                                        onSubmit={(event) => submitCriterionEdit(event, criterion.id)}
+                                                        updateRubric={updateEditRubric}
+                                                        submitLabel="Guardar cambios"
+                                                        onCancel={() => setEditingCriterionId(null)}
+                                                        editingCriterionId={editingCriterionId}
+                                                        compact
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div key={criterion.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-4 py-3">
+                                                    <div className="min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <p className="font-bold text-slate-800">{criterion.name}</p>
+                                                            <span className="rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-black text-slate-600">
+                                                                {criterion.weight}%
+                                                            </span>
+                                                        </div>
+                                                        {criterion.description && <p className="mt-1 text-sm text-slate-500">{criterion.description}</p>}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => startEditCriterion(criterion, managedCategory.id)}
+                                                            className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                                            title="Editar criterio"
+                                                        >
+                                                            <Edit2 className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setDeleteTarget({ type: 'criterion', id: criterion.id, name: criterion.name })}
+                                                            className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                                                            title="Eliminar criterio"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ),
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AppLayout>
     );
 }
@@ -411,13 +619,21 @@ function SummaryCard({ label, value, icon, iconClass }: { label: string; value: 
     );
 }
 
-function CategoryCreateCard({ form, onSubmit }: { form: ReturnType<typeof useForm<{ name: string; description: string }>>; onSubmit: (event: React.FormEvent) => void }) {
+function CategoryCreateCard({ form, onSubmit }: { form: ReturnType<typeof useForm<{ name: string; description: string; evaluation_type: string }>>; onSubmit: (event: React.FormEvent) => void }) {
     return (
         <Card className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="text-lg font-black text-slate-900">Nueva categoría</h2>
             <p className="mt-1 text-sm text-slate-500">Agrupa criterios por área de desempeño.</p>
 
             <form onSubmit={onSubmit} className="mt-5 space-y-4">
+                <SelectField label="Tipo de evaluacion" value={form.data.evaluation_type} onChange={(value) => form.setData('evaluation_type', value)}>
+                    {evaluationTypes.map((type) => (
+                        <option key={type.value} value={type.value}>
+                            {type.label}
+                        </option>
+                    ))}
+                </SelectField>
+
                 <div className="space-y-2">
                     <Label htmlFor="category-name" className="text-[11px] font-black uppercase text-slate-400">
                         Nombre
@@ -460,6 +676,7 @@ function CriterionFormCard({
     updateRubric,
     submitLabel,
     onCancel,
+    editingCriterionId,
     compact = false,
 }: {
     categories: Category[];
@@ -477,8 +694,20 @@ function CriterionFormCard({
     updateRubric: (level: keyof Rubric, value: string) => void;
     submitLabel: string;
     onCancel?: () => void;
+    editingCriterionId?: number | null;
     compact?: boolean;
 }) {
+    const availableCategories = categories.filter((category) => getCategoryType(category) === form.data.evaluation_type);
+    const selectedCategory = availableCategories.find((category) => String(category.id) === form.data.evaluation_category_id);
+    const currentWeight = selectedCategory?.criteria.reduce((sum, criterion) => {
+        if (editingCriterionId === criterion.id) {
+            return sum;
+        }
+
+        return sum + Number(criterion.weight);
+    }, 0) ?? 0;
+    const projectedWeight = currentWeight + Number(form.data.weight || 0);
+
     const content = (
         <>
             {!compact && (
@@ -490,7 +719,7 @@ function CriterionFormCard({
 
             <form onSubmit={onSubmit} className="mt-5 space-y-4">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <SelectField label="Tipo de evaluación" value={form.data.evaluation_type} onChange={(value) => form.setData('evaluation_type', value)}>
+                    <SelectField label="Tipo de evaluacion" value={form.data.evaluation_type} onChange={(value) => form.setData((current) => ({ ...current, evaluation_type: value, evaluation_category_id: '' }))}>
                         {evaluationTypes.map((type) => (
                             <option key={type.value} value={type.value}>
                                 {type.label}
@@ -500,13 +729,19 @@ function CriterionFormCard({
 
                     <SelectField label="Categoría" value={form.data.evaluation_category_id} onChange={(value) => form.setData('evaluation_category_id', value)}>
                         <option value="">Seleccionar categoría</option>
-                        {categories.map((category) => (
+                        {availableCategories.map((category) => (
                             <option key={category.id} value={category.id}>
                                 {category.name}
                             </option>
                         ))}
                     </SelectField>
                 </div>
+
+                {selectedCategory && (
+                    <div className={`rounded-2xl px-3 py-2 text-xs font-black ${projectedWeight <= 100 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                        Peso de la categoria con este criterio: {projectedWeight}% / 100%
+                    </div>
+                )}
 
                 <div className="space-y-2">
                     <Label className="text-[11px] font-black uppercase text-slate-400">Nombre</Label>

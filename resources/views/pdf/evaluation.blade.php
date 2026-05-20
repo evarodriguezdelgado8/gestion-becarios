@@ -117,6 +117,13 @@
     </style>
 </head>
 <body>
+    @php
+        $finalGrade = (float) $evaluation->final_grade * 2;
+        $formattedFinalGrade = fmod($finalGrade, 1.0) === 0.0
+            ? number_format($finalGrade, 0, ',', '.')
+            : number_format($finalGrade, 1, ',', '.');
+    @endphp
+
     <div class="header">
         <h1 class="title">Informe de evaluación {{ strtolower($typeLabel) }}</h1>
         <p class="subtitle">
@@ -141,7 +148,7 @@
                 <p class="meta-row"><span class="label">Tipo</span>{{ $typeLabel }}</p>
                 <p class="meta-row"><span class="label">Fecha</span>{{ $evaluation->created_at?->format('d/m/Y') ?? 'No indicada' }}</p>
                 <p class="meta-row"><span class="label">Tutor</span>{{ $evaluation->tutor?->name ?? 'No indicado' }}</p>
-                <p class="meta-row"><span class="label">Nota final</span>{{ number_format((float) $evaluation->final_grade * 2, 1, ',', '.') }} / 10</p>
+                <p class="meta-row"><span class="label">Nota final</span>{{ $formattedFinalGrade }} / 10</p>
             </div>
         </div>
     </div>
@@ -149,7 +156,7 @@
     <div class="summary">
         <div class="summary-item">
             <span class="summary-label">Nota final</span>
-            <span class="summary-value">{{ number_format((float) $evaluation->final_grade * 2, 1, ',', '.') }} / 10</span>
+            <span class="summary-value">{{ $formattedFinalGrade }} / 10</span>
         </div>
         <div class="summary-item">
             <span class="summary-label">Criterios</span>
