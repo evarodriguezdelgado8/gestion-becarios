@@ -63,7 +63,8 @@ const formatDate = (date?: string) => {
 };
 
 const gradeOutOf10 = (grade: number | string) => Number(grade || 0) * 2;
-const formatFinalGrade = (grade: number | string) => `${gradeOutOf10(grade).toFixed(1)} / 10`;
+const formatGradeNumber = (grade: number) => (Number.isInteger(grade) ? String(grade) : grade.toFixed(1));
+const formatFinalGrade = (grade: number | string) => `${formatGradeNumber(gradeOutOf10(grade))} / 10`;
 const getFinalGradeClass = (grade: number | string) => (gradeOutOf10(grade) < 5 ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700');
 
 export default function Mine({ intern, evaluaciones }: Props) {
@@ -77,7 +78,7 @@ export default function Mine({ intern, evaluaciones }: Props) {
     const average =
         evaluaciones.length > 0
             ? formatFinalGrade(evaluaciones.reduce((total, evaluation) => total + Number(evaluation.final_grade || 0), 0) / evaluaciones.length)
-            : '0.0 / 10';
+            : '0 / 10';
     const bestEvaluation = evaluaciones.reduce<Evaluation | null>((best, evaluation) => {
         if (!best) return evaluation;
         return Number(evaluation.final_grade) > Number(best.final_grade) ? evaluation : best;
@@ -108,13 +109,13 @@ export default function Mine({ intern, evaluaciones }: Props) {
                     <SummaryCard label="Media" value={average} icon={<BarChart3 className="h-5 w-5" />} iconClass="bg-emerald-50 text-emerald-600" />
                     <SummaryCard
                         label="Mejor nota"
-                        value={bestEvaluation ? formatFinalGrade(bestEvaluation.final_grade) : '0.0 / 10'}
+                        value={bestEvaluation ? formatFinalGrade(bestEvaluation.final_grade) : '0 / 10'}
                         icon={<Star className="h-5 w-5" />}
                         iconClass="bg-amber-50 text-amber-600"
                     />
                     <SummaryCard
                         label="Evolución"
-                        value={`${trend >= 0 ? '+' : ''}${trend.toFixed(1)}`}
+                        value={`${trend >= 0 ? '+' : ''}${formatGradeNumber(trend)}`}
                         icon={<TrendingUp className="h-5 w-5" />}
                         iconClass={trend >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}
                     />
@@ -269,11 +270,11 @@ function EvolutionChart({ evaluations }: { evaluations: Evaluation[] }) {
                             <div
                                 className="w-full rounded-t-xl bg-blue-500 transition-all"
                                 style={{ height: `${height}%` }}
-                                title={`${typeLabels[evaluation.type] ?? evaluation.type} · ${grade.toFixed(1)} / 10`}
+                                title={`${typeLabels[evaluation.type] ?? evaluation.type} · ${formatGradeNumber(grade)} / 10`}
                             />
                         </div>
                         <div className="text-center">
-                            <p className="text-xs font-black text-slate-800">{grade.toFixed(1)}</p>
+                            <p className="text-xs font-black text-slate-800">{formatGradeNumber(grade)}</p>
                             <p className="truncate text-[10px] font-semibold text-slate-400">{formatDate(evaluation.created_at)}</p>
                         </div>
                     </div>

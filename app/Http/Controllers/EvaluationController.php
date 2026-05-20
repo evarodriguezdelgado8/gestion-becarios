@@ -242,7 +242,11 @@ class EvaluationController extends Controller
 
     public function storeCategory(Request $request)
     {
-        $validated = $request->validate(['name' => 'required|string', 'description' => 'nullable|string']);
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'description' => 'nullable|string',
+            'evaluation_type' => 'required|in:weekly,monthly,final',
+        ]);
         EvaluationCategory::create($validated);
 
         return back()->with('success', 'Categoría creada.');
@@ -250,8 +254,13 @@ class EvaluationController extends Controller
 
     public function updateCategory(Request $request, EvaluationCategory $category)
     {
-        $validated = $request->validate(['name' => 'required|string', 'description' => 'nullable|string']);
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'description' => 'nullable|string',
+            'evaluation_type' => 'required|in:weekly,monthly,final',
+        ]);
         $category->update($validated);
+        $category->criteria()->update(['evaluation_type' => $validated['evaluation_type']]);
 
         return back()->with('success', 'Categoría actualizada.');
     }
@@ -273,7 +282,7 @@ class EvaluationController extends Controller
 
     public function updateCriterion(Request $request, EvaluationCriterion $criterion)
     {
-        $validated = $this->validateCriterion($request);
+        $validated = $this->validateCriterion($request, $criterion);
         $criterion->update($validated);
 
         return back()->with('success', 'Criterio actualizado.');
@@ -286,7 +295,7 @@ class EvaluationController extends Controller
         return back()->with('success', 'Criterio eliminado.');
     }
 
-    private function validateCriterion(Request $request): array
+    private function validateCriterion(Request $request, ?EvaluationCriterion $criterion = null): array
     {
         $validated = $request->validate([
             'evaluation_category_id' => 'required|exists:evaluation_categories,id',
@@ -297,6 +306,25 @@ class EvaluationController extends Controller
             'rubric' => 'nullable|array',
             'rubric.*' => 'nullable|string',
         ]);
+
+        $category = EvaluationCategory::findOrFail($validated['evaluation_category_id']);
+
+        if ($category->evaluation_type !== $validated['evaluation_type']) {
+            throw ValidationException::withMessages([
+                'evaluation_category_id' => 'La categorÃ­a seleccionada no corresponde al tipo de evaluaciÃ³n elegido.',
+            ]);
+        }
+
+        $usedWeight = EvaluationCriterion::query()
+            ->where('evaluation_category_id', $category->id)
+            ->when($criterion, fn ($query) => $query->whereKeyNot($criterion->id))
+            ->sum('weight');
+
+        if (((float) $usedWeight + (float) $validated['weight']) > 100) {
+            throw ValidationException::withMessages([
+                'weight' => 'El peso total de los criterios de esta categorÃ­a no puede superar el 100%.',
+            ]);
+        }
 
         $validated['rubric'] = collect($validated['rubric'] ?? [])
             ->map(fn ($value) => trim((string) $value))
