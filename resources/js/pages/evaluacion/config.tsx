@@ -75,7 +75,6 @@ const getRubricEntries = (rubric?: Record<string, string> | string[] | null) =>
         .filter((entry) => entry.text);
 
 export default function Config({ categories }: { categories: Category[] }) {
-    const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
     const [editingCriterionId, setEditingCriterionId] = useState<number | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<{ type: 'category' | 'criterion'; id: number; name: string } | null>(null);
     const [categoryTypeFilter, setCategoryTypeFilter] = useState('all');
@@ -130,7 +129,6 @@ export default function Config({ categories }: { categories: Category[] }) {
 
     const openCategoryManager = (category: Category) => {
         setEditingCriterionId(null);
-        setEditingCategoryId(category.id);
         setManagedCategoryId(category.id);
         categoryEditForm.setData({
             name: category.name,
@@ -138,18 +136,20 @@ export default function Config({ categories }: { categories: Category[] }) {
             evaluation_type: getCategoryType(category),
         });
     };
-    const startEditCategory = openCategoryManager;
+
+    const closeCategoryManager = () => {
+        setManagedCategoryId(null);
+        setEditingCriterionId(null);
+    };
 
     const submitCategoryEdit = (event: React.FormEvent, categoryId: number) => {
         event.preventDefault();
         categoryEditForm.put(`/evaluaciones/categorias/${categoryId}`, {
             preserveScroll: true,
-            onSuccess: () => setEditingCategoryId(null),
         });
     };
 
     const startEditCriterion = (criterion: Criterion, categoryId: number) => {
-        setEditingCategoryId(null);
         setEditingCriterionId(criterion.id);
         criterionEditForm.setData({
             evaluation_category_id: String(criterion.evaluation_category_id ?? categoryId),
@@ -198,9 +198,6 @@ export default function Config({ categories }: { categories: Category[] }) {
         });
     };
 
-    const selectedCategory = categories.find((category) => String(category.id) === criterionForm.data.evaluation_category_id);
-    const selectedCategoryWeight = selectedCategory?.criteria.reduce((sum, criterion) => sum + Number(criterion.weight), 0) ?? 0;
-    const selectedCategoryProjectedWeight = selectedCategoryWeight + Number(criterionForm.data.weight || 0);
     const criteriaCount = categories.reduce((total, category) => total + category.criteria.length, 0);
     const categoriesByType = evaluationTypes.map((type) => ({
         ...type,
@@ -223,6 +220,20 @@ export default function Config({ categories }: { categories: Category[] }) {
             setCategoriesPage(totalCategoryPages);
         }
     }, [categoriesPage, totalCategoryPages]);
+
+    useEffect(() => {
+        if (!managedCategory) return;
+
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                closeCategoryManager();
+            }
+        };
+
+        window.addEventListener('keydown', handleEscape);
+
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [managedCategory]);
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Evaluación y Notas', href: '/evaluaciones' }, { title: 'Configuración', href: '/evaluaciones/configuracion' }]}>
@@ -316,40 +327,9 @@ export default function Config({ categories }: { categories: Category[] }) {
                             <div className="space-y-4">
                                 {paginatedCategories.map((category) => {
                                     const categoryWeight = category.criteria.reduce((sum, criterion) => sum + Number(criterion.weight), 0);
-                                    const isEditingCategory = false;
                                     return (
                                         <div key={category.id} className="overflow-hidden rounded-2xl border border-slate-200">
                                             <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
-                                                {isEditingCategory ? (
-                                                    <form onSubmit={(event) => submitCategoryEdit(event, category.id)} className="space-y-3">
-                                                        <Input
-                                                            value={categoryEditForm.data.name}
-                                                            onChange={(event) => categoryEditForm.setData('name', event.target.value)}
-                                                            className="h-10 rounded-xl border-slate-200 bg-white"
-                                                        />
-                                                        <SelectField label="Tipo de evaluacion" value={categoryEditForm.data.evaluation_type} onChange={(value) => categoryEditForm.setData('evaluation_type', value)}>
-                                                            {evaluationTypes.map((type) => (
-                                                                <option key={type.value} value={type.value}>
-                                                                    {type.label}
-                                                                </option>
-                                                            ))}
-                                                        </SelectField>
-                                                        <textarea
-                                                            value={categoryEditForm.data.description}
-                                                            onChange={(event) => categoryEditForm.setData('description', event.target.value)}
-                                                            className="min-h-20 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
-                                                            placeholder="Descripción"
-                                                        />
-                                                        <div className="flex justify-end gap-2">
-                                                            <button type="button" onClick={() => setEditingCategoryId(null)} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:text-slate-900">
-                                                                <X className="h-4 w-4" />
-                                                            </button>
-                                                            <button type="submit" className="rounded-xl bg-blue-600 p-2 text-white hover:bg-blue-700">
-                                                                <Check className="h-4 w-4" />
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                ) : (
                                                     <div className="flex items-center justify-between gap-3">
                                                         <div>
                                                             <p className="font-black text-slate-900">{category.name}</p>
@@ -360,41 +340,27 @@ export default function Config({ categories }: { categories: Category[] }) {
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 shadow-sm">{categoryWeight}%</span>
-                                                            <button onClick={() => startEditCategory(category)} className="rounded-xl bg-blue-50 p-2 text-blue-600 transition hover:bg-blue-100 hover:text-blue-700" title="Editar categoría">
+                                                            <button type="button" onClick={() => openCategoryManager(category)} className="rounded-xl bg-blue-50 p-2 text-blue-600 transition hover:bg-blue-100 hover:text-blue-700" title="Editar categoría" aria-label={`Editar categoría ${category.name}`}>
                                                                 <Edit2 className="h-4 w-4" />
                                                             </button>
                                                             <button
                                                                 onClick={() => setDeleteTarget({ type: 'category', id: category.id, name: category.name })}
                                                                 className="rounded-xl bg-rose-50 p-2 text-red-600 transition hover:bg-red-100 hover:text-red-700"
                                                                 title="Eliminar categoría"
+                                                                aria-label={`Eliminar categoría ${category.name}`}
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </button>
                                                         </div>
                                                     </div>
-                                                )}
                                             </div>
 
                                             {category.criteria.length === 0 ? (
                                                 <div className="px-4 py-4 text-sm font-semibold text-slate-400">Sin criterios en esta categoría.</div>
                                             ) : (
                                                 <div className="divide-y divide-slate-100">
-                                                    {category.criteria.map((criterion) =>
-                                                        false && editingCriterionId === criterion.id ? (
-                                                            <div key={criterion.id} className="bg-slate-50/60 px-4 py-4">
-                                                                <CriterionFormCard
-                                                                    categories={categories}
-                                                                    form={criterionEditForm}
-                                                                    onSubmit={(event) => submitCriterionEdit(event, criterion.id)}
-                                                                    updateRubric={updateEditRubric}
-                                                                    submitLabel="Guardar cambios"
-                                                                    onCancel={() => setEditingCriterionId(null)}
-                                                                    editingCriterionId={editingCriterionId}
-                                                                    compact
-                                                                />
-                                                            </div>
-                                                        ) : (
-                                                            <div key={criterion.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-4 py-3">
+                                                    {category.criteria.map((criterion) => (
+                                                            <div key={criterion.id} className="px-4 py-3">
                                                                 <div className="min-w-0">
                                                                     <div className="flex flex-wrap items-center gap-2">
                                                                         <p className="font-bold text-slate-800">{criterion.name}</p>
@@ -414,21 +380,8 @@ export default function Config({ categories }: { categories: Category[] }) {
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                                <div className="hidden">
-                                                                    <button onClick={() => startEditCriterion(criterion, category.id)} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700" title="Editar criterio">
-                                                                        <Edit2 className="h-4 w-4" />
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => setDeleteTarget({ type: 'criterion', id: criterion.id, name: criterion.name })}
-                                                                        className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-                                                                        title="Eliminar criterio"
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </button>
-                                                                </div>
                                                             </div>
-                                                        ),
-                                                    )}
+                                                    ))}
                                                 </div>
                                             )}
                                         </div>
@@ -475,21 +428,23 @@ export default function Config({ categories }: { categories: Category[] }) {
 
             {managedCategory && (
                 <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-                    <div className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="category-manager-title"
+                        className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"
+                    >
                         <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-slate-50 px-6 py-5">
                             <div>
                                 <p className="text-[11px] font-black uppercase text-slate-400">Gestionar categoria</p>
-                                <h2 className="mt-1 text-xl font-black text-slate-900">{managedCategory.name}</h2>
+                                <h2 id="category-manager-title" className="mt-1 text-xl font-black text-slate-900">{managedCategory.name}</h2>
                                 <p className="mt-1 text-sm text-slate-500">Edita la categoria y administra sus criterios desde aqui.</p>
                             </div>
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setManagedCategoryId(null);
-                                    setEditingCriterionId(null);
-                                    setEditingCategoryId(null);
-                                }}
+                                onClick={closeCategoryManager}
                                 className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:text-slate-900"
+                                aria-label="Cerrar modal"
                             >
                                 <X className="h-4 w-4" />
                             </button>
@@ -579,6 +534,7 @@ export default function Config({ categories }: { categories: Category[] }) {
                                                             onClick={() => startEditCriterion(criterion, managedCategory.id)}
                                                             className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                                                             title="Editar criterio"
+                                                            aria-label={`Editar criterio ${criterion.name}`}
                                                         >
                                                             <Edit2 className="h-4 w-4" />
                                                         </button>
@@ -587,6 +543,7 @@ export default function Config({ categories }: { categories: Category[] }) {
                                                             onClick={() => setDeleteTarget({ type: 'criterion', id: criterion.id, name: criterion.name })}
                                                             className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
                                                             title="Eliminar criterio"
+                                                            aria-label={`Eliminar criterio ${criterion.name}`}
                                                         >
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>

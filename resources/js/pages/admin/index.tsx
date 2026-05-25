@@ -53,11 +53,10 @@ export default function RolesIndex({ roles, allPermissions }: Props) {
         <AppLayout>
             <Head title="Matriz de Permisos" />
             
-            {/* Fondo con contraste para que la tabla resalte */}
-            <div className="w-full min-h-screen bg-slate-100 py-8 px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">
                 
-                <div className="max-w-[98rem] mx-auto">
-                    <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
+                <div>
+                    <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                         <div>
                             <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Matriz de Roles y Permisos</h1>
                             <p className="text-slate-500 text-sm mt-1">Configuración técnica de accesos para los perfiles del sistema.</p>
@@ -67,10 +66,9 @@ export default function RolesIndex({ roles, allPermissions }: Props) {
                         </div>
                     </div>
 
-                    {/* Tabla con bordes definidos y sombra fuerte */}
-                    <div className="bg-white rounded-xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+                    <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xl">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse table-fixed">
+                            <table className="w-full min-w-[900px] text-left border-collapse table-fixed">
                                 <thead>
                                     <tr className="bg-slate-800 border-b border-slate-700">
                                         <th className="p-4 text-[11px] font-bold text-slate-300 uppercase tracking-widest w-[35%]">
