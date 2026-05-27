@@ -60,6 +60,16 @@ class AbsenceController extends Controller
             abort(403);
         }
 
+        if ($user->hasRole('tutor') && ! $user->hasRole('admin')) {
+            abort_unless(
+                Intern::query()
+                    ->where('user_id', $absence->user_id)
+                    ->where('tutor_id', $user->id)
+                    ->exists(),
+                403,
+            );
+        }
+
         $request->validate([
             'status' => 'required|in:approved,rejected',
             'tutor_comment' => 'nullable|string|max:1000',

@@ -17,10 +17,10 @@ test('manual bulk registry rolls back when one intern has an overlapping registr
     $center = Center::factory()->create();
 
     $firstUser = User::factory()->create();
-    Intern::factory()->create(['user_id' => $firstUser->id, 'center_id' => $center->id]);
+    Intern::factory()->create(['user_id' => $firstUser->id, 'center_id' => $center->id, 'tutor_id' => $tutor->id]);
 
     $secondUser = User::factory()->create();
-    Intern::factory()->create(['user_id' => $secondUser->id, 'center_id' => $center->id]);
+    Intern::factory()->create(['user_id' => $secondUser->id, 'center_id' => $center->id, 'tutor_id' => $tutor->id]);
 
     TimeRegistry::create([
         'user_id' => $secondUser->id,
@@ -53,7 +53,7 @@ test('manual registry stores decimal hours from real minutes', function () {
     $center = Center::factory()->create();
 
     $internUser = User::factory()->create();
-    Intern::factory()->create(['user_id' => $internUser->id, 'center_id' => $center->id]);
+    Intern::factory()->create(['user_id' => $internUser->id, 'center_id' => $center->id, 'tutor_id' => $tutor->id]);
 
     $response = $this->actingAs($tutor)->post(route('time.manual'), [
         'user_ids' => [$internUser->id],
@@ -77,7 +77,7 @@ test('manual registry accepts punctual status as a normal registry alias', funct
     $center = Center::factory()->create();
 
     $internUser = User::factory()->create();
-    Intern::factory()->create(['user_id' => $internUser->id, 'center_id' => $center->id]);
+    Intern::factory()->create(['user_id' => $internUser->id, 'center_id' => $center->id, 'tutor_id' => $tutor->id]);
 
     $response = $this->actingAs($tutor)->post(route('time.manual'), [
         'user_ids' => [$internUser->id],

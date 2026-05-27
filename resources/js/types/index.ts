@@ -2,7 +2,6 @@ export type * from './auth';
 export type * from './navigation';
 export type * from './ui';
 
-
 export interface BreadcrumbItem {
     title: string;
     href: string | any;
@@ -15,13 +14,13 @@ export interface Center {
     address: string;
     phone: string;
     email: string;
-    web?: string; 
-    
+    web?: string;
+
     contact_name: string;
     contact_role: string;
     contact_phone: string;
     contact_email: string;
-   
+
     created_at?: string;
     updated_at?: string;
 }
@@ -76,11 +75,18 @@ export interface Intern {
         name: string;
         email?: string;
     } | null;
+    user?: {
+        id: number;
+        name: string;
+        email: string;
+        photo_url?: string | null;
+        avatar?: string | null;
+        email_verified_at?: string | null;
+    } | null;
     academic_tutor: string;
     start_date: string;
     end_date: string;
 }
-
 
 export interface InternFormData {
     name: string;

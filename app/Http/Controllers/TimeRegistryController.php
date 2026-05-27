@@ -60,7 +60,10 @@ class TimeRegistryController extends Controller
                 ]);
             $data['role'] = 'intern';
         } else {
-            $query = Intern::query()->with(['center:id,name', 'user.schedules:id,user_id,day_of_week,start_time,end_time']);
+            abort_unless($user->hasAnyRole(['admin', 'tutor']), 403);
+
+            $query = $this->managedInternsQuery($user)
+                ->with(['center:id,name', 'user.schedules:id,user_id,day_of_week,start_time,end_time']);
             $data['managerRegistries'] = [];
             $data['managerAbsences'] = [];
 
@@ -225,9 +228,13 @@ class TimeRegistryController extends Controller
                     ->values();
             }
 
-            $data['centers'] = Center::all(['id', 'name']);
-            $data['allInterns'] = Intern::all(['id', 'name', 'last_name']);
-            $data['cycleOptions'] = Intern::whereNotNull('academic_cycle')
+            $data['centers'] = Center::query()
+                ->whereHas('interns', fn ($query) => $query->whereIn('id', $this->managedInternsQuery($user)->pluck('id')))
+                ->orderBy('name')
+                ->get(['id', 'name']);
+            $data['allInterns'] = $this->managedInternsQuery($user)->get(['id', 'name', 'last_name']);
+            $data['cycleOptions'] = $this->managedInternsQuery($user)
+                ->whereNotNull('academic_cycle')
                 ->distinct()
                 ->pluck('academic_cycle')
                 ->map(fn ($c) => ['label' => $c, 'value' => $c])
@@ -274,6 +281,33 @@ class TimeRegistryController extends Controller
         return $user;
     }
 
+    private function managedInternsQuery(User $user)
+    {
+        return Intern::query()
+            ->when($user->hasRole('tutor') && ! $user->hasRole('admin'), fn ($query) => $query->where('tutor_id', $user->id));
+    }
+
+    private function ensureManagedInternUserId(User $user, int $userId): Intern
+    {
+        $intern = $this->managedInternsQuery($user)
+            ->where('user_id', $userId)
+            ->first();
+
+        abort_unless($intern instanceof Intern, 403);
+
+        return $intern;
+    }
+
+    private function ensureManagedIntern(User $user, Intern $intern): void
+    {
+        abort_unless($this->managedInternsQuery($user)->whereKey($intern->id)->exists(), 403);
+    }
+
+    private function ensureManagedRegistry(User $user, TimeRegistry $timeRegistry): void
+    {
+        $this->ensureManagedInternUserId($user, (int) $timeRegistry->user_id);
+    }
+
     private function ensureNoOverlap(int $userId, Carbon $checkIn, Carbon $checkOut, ?int $exceptRegistryId = null): void
     {
         $overlaps = TimeRegistry::query()
@@ -295,6 +329,9 @@ class TimeRegistryController extends Controller
     // Registro manual para uno o varios becarios
     public function storeManual(Request $request)
     {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $user->hasAnyRole(['admin', 'tutor']), 403);
+
         $request->validate([
             'user_ids' => 'required|array',
             'user_ids.*' => 'exists:users,id',
@@ -308,13 +345,9 @@ class TimeRegistryController extends Controller
         $checkOut = Carbon::parse($request->check_out);
         $hours = round($checkIn->diffInMinutes($checkOut) / 60, 2);
 
-        DB::transaction(function () use ($request, $checkIn, $checkOut, $hours) {
+        DB::transaction(function () use ($request, $checkIn, $checkOut, $hours, $user) {
             foreach ($request->user_ids as $userId) {
-                if (! Intern::where('user_id', $userId)->exists()) {
-                    throw ValidationException::withMessages([
-                        'user_ids' => 'Solo se pueden crear fichajes para becarios.',
-                    ]);
-                }
+                $this->ensureManagedInternUserId($user, (int) $userId);
 
                 $this->ensureNoOverlap((int) $userId, $checkIn, $checkOut);
 
@@ -338,19 +371,18 @@ class TimeRegistryController extends Controller
     // Configuración de horarios masiva
     public function bulkSchedule(Request $request)
     {
+        $user = Auth::user();
+        abort_unless($user instanceof User && $user->hasAnyRole(['admin', 'tutor']), 403);
+
         $request->validate([
             'user_ids' => 'required|array',
             'user_ids.*' => 'exists:users,id',
             'schedules' => 'required|array', // Array de {day, start, end}
         ]);
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $user) {
             foreach ($request->user_ids as $userId) {
-                if (! Intern::where('user_id', $userId)->exists()) {
-                    throw ValidationException::withMessages([
-                        'user_ids' => 'Solo se pueden configurar horarios de becarios.',
-                    ]);
-                }
+                $this->ensureManagedInternUserId($user, (int) $userId);
 
                 $user = User::findOrFail($userId);
 
@@ -464,6 +496,7 @@ class TimeRegistryController extends Controller
         if (! $user || ! $user->hasAnyRole(['admin', 'tutor'])) {
             abort(403);
         }
+        $this->ensureManagedRegistry($user, $timeRegistry);
 
         $request->validate([
             'check_in' => 'required|date',
@@ -518,6 +551,7 @@ class TimeRegistryController extends Controller
             $intern = Intern::query()
                 ->with(['center', 'user.schedules'])
                 ->findOrFail($validated['intern_id']);
+            $this->ensureManagedIntern($user, $intern);
         }
 
         abort_unless($intern->user_id, 404, 'El becario no tiene un usuario asociado.');
@@ -710,6 +744,7 @@ class TimeRegistryController extends Controller
         if (! $user || ! $user->hasAnyRole(['admin', 'tutor'])) {
             abort(403);
         }
+        $this->ensureManagedRegistry($user, $timeRegistry);
 
         $userId = (int) $timeRegistry->user_id;
 

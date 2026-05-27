@@ -1,28 +1,30 @@
 <?php
 
-use App\Http\Controllers\CenterController;
-use App\Http\Controllers\InternController;
-use App\Http\Controllers\TaskController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\TimeRegistryController;
 use App\Http\Controllers\AbsenceController;
+use App\Http\Controllers\CenterController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EvaluationController;
+use App\Http\Controllers\InternController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TimeRegistryController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use Laravel\Fortify\Features;
 
 // --- RUTAS PÚBLICAS ---
-Route::inertia('/', 'welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
+Route::get('/', fn () => Auth::check()
+    ? redirect()->route('dashboard')
+    : redirect()->route('login')
+)->name('home');
 
 // --- RUTAS PROTEGIDAS ---
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::get('/dashboard', fn() => Inertia::render('dashboard'))->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // --- MÓDULO: CENTROS EDUCATIVOS ---
-    
+
     // 1. Primero las rutas de GESTIÓN (CREATE debe ir antes que {center})
     Route::middleware(['can:manage centers'])->group(function () {
         Route::get('/centros/create', [CenterController::class, 'create'])->name('centros.create');
@@ -43,12 +45,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // 1. Acciones disponibles para admin y tutor
     Route::middleware(['permission:view interns|manage interns'])->group(function () {
         Route::get('becarios/export', [InternController::class, 'export'])->name('becarios.export');
-    
+        Route::post('/becarios/invitaciones', [InternController::class, 'sendBulkInvitations'])->name('becarios.invite.bulk');
+        Route::post('/becarios/{intern}/invitar', [InternController::class, 'sendInvitation'])->name('becarios.invite');
+
         Route::post('/control-horario/manual', [TimeRegistryController::class, 'storeManual'])->name('time.manual');
         Route::put('/control-horario/{timeRegistry}', [TimeRegistryController::class, 'updateManual'])->name('time.update-manual');
         Route::delete('/control-horario/{timeRegistry}', [TimeRegistryController::class, 'destroy'])->name('time.destroy');
         Route::put('/control-horario/ausencias/{absence}', [AbsenceController::class, 'update'])->name('absences.update');
-        
+
         Route::post('/control-horario/bulk-schedule', [TimeRegistryController::class, 'bulkSchedule'])->name('time.bulk-schedule');
     });
 
@@ -72,7 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/tareas/{task}/comments', [TaskController::class, 'storeComment'])->name('tareas.comments.store');
         Route::post('/tareas/{task}/deliveries', [TaskController::class, 'storeDelivery'])->name('tareas.deliveries.store');
     });
-    
+
     Route::middleware(['can:update task status'])->group(function () {
         Route::patch('/tareas/{task}/status', [TaskController::class, 'updateStatus'])->name('tareas.updateStatus');
     });
@@ -85,7 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // --- MÓDULO: CONTROL HORARIO ---
     Route::middleware(['auth', 'can:view own tasks'])->group(function () {
-        
+
         Route::get('/control-horario', [TimeRegistryController::class, 'index'])->name('control-horario');
         Route::get('/control-horario/parte-horas/pdf', [TimeRegistryController::class, 'exportPdf'])->name('control-horario.pdf');
         Route::post('/control-horario/check-in', [TimeRegistryController::class, 'store'])->name('control-horario.check-in');
@@ -97,7 +101,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // --- MÓDULO: EVALUACIÓN ---
     Route::middleware(['auth'])->group(function () {
         Route::get('/evaluaciones/{evaluation}/pdf', [EvaluationController::class, 'exportPdf'])->name('evaluaciones.pdf');
-        
+
         // Rutas compartidas por Admin y Tutor (Evaluar y Ver Historial)
         Route::middleware(['role:admin|tutor'])->group(function () {
             Route::get('/evaluaciones', [EvaluationController::class, 'index'])->name('evaluaciones.index');
@@ -110,7 +114,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         Route::middleware(['role:admin'])->group(function () {
-            
+
             // Configuracion de Criterios
             Route::get('/evaluaciones/configuracion', [EvaluationController::class, 'config'])->name('evaluaciones.config');
             Route::post('/evaluaciones/categorias', [EvaluationController::class, 'storeCategory'])->name('evaluaciones.categories.store');
@@ -125,6 +129,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::middleware(['role:intern'])->group(function () {
             Route::get('/mis-evaluaciones', [EvaluationController::class, 'myEvaluations'])->name('evaluaciones.mine');
         });
+    });
+
+    // --- MÓDULO: REPORTES ---
+    Route::middleware(['role:admin|tutor'])->group(function () {
+        Route::get('/reportes', [ReportController::class, 'index'])->name('reportes.index');
+        Route::get('/reportes/exportar', [ReportController::class, 'export'])->name('reportes.export');
+        Route::post('/reportes/plantillas', [ReportController::class, 'storeTemplate'])->name('reportes.templates.store');
+        Route::delete('/reportes/plantillas/{template}', [ReportController::class, 'destroyTemplate'])->name('reportes.templates.destroy');
     });
 
     // --- MÓDULO: ADMINISTRACIÓN (Solo Admin) ---

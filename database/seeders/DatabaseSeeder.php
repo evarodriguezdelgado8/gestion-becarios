@@ -7,6 +7,7 @@ use App\Models\Intern;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -50,7 +51,7 @@ class DatabaseSeeder extends Seeder
                 $user = User::factory()->create([
                     'name' => trim($intern->name.' '.$intern->last_name),
                     'email' => $intern->email,
-                    'password' => Hash::make($intern->dni),
+                    'password' => Hash::make(Str::random(48)),
                 ]);
                 $user->assignRole('intern');
 

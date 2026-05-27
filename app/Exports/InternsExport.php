@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Intern;
+use App\Models\User;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -11,10 +12,12 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 class InternsExport implements FromQuery, WithMapping, WithHeadings, ShouldAutoSize
 {
     protected $filters;
+    protected ?User $user;
 
-    public function __construct($filters = [])
+    public function __construct($filters = [], ?User $user = null)
     {
         $this->filters = $filters;
+        $this->user = $user;
     }
 
     private function commaFilter(?string $value): array
@@ -28,7 +31,9 @@ class InternsExport implements FromQuery, WithMapping, WithHeadings, ShouldAutoS
 
     public function query()
     {
-        $query = Intern::query()->with('center:id,name');
+        $query = Intern::query()
+            ->with('center:id,name')
+            ->when($this->user?->hasRole('tutor') && ! $this->user?->hasRole('admin'), fn ($query) => $query->where('tutor_id', $this->user->id));
 
         if (!empty($this->filters['search'])) {
             $search = $this->filters['search'];

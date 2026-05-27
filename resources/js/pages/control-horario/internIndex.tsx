@@ -65,7 +65,7 @@ export default function InternDashboard({
         <div className="mx-auto w-full max-w-6xl animate-in space-y-8 pb-10 fade-in duration-500">
             <Tabs defaultValue="dashboard" className="w-full">
                 <div className="mb-8 flex flex-col items-center justify-between gap-4 md:flex-row">
-                    <h2 className="text-2xl font-bold text-gray-900">Control de asistencia</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Control horario</h2>
                 </div>
 
                 <InternPdfCard
