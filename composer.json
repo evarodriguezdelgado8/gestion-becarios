@@ -22,7 +22,9 @@
         "spatie/laravel-medialibrary": "^11.21",
         "spatie/laravel-pdf": "^2.2",
         "spatie/laravel-permission": "^7.2",
-        "tightenco/ziggy": "^2.6"
+        "tightenco/ziggy": "^2.6",        
+        "ext-pdo_pgsql": "*"
+
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
