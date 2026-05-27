@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "dompdf/dompdf": "^3.1",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel-lang/common": "^6.8",
@@ -22,7 +22,9 @@
         "spatie/laravel-medialibrary": "^11.21",
         "spatie/laravel-pdf": "^2.2",
         "spatie/laravel-permission": "^7.2",
-        "tightenco/ziggy": "^2.6",        
+        "tightenco/ziggy": "^2.6",
+        "ext-gd": "*",
+        "ext-exif": "*",               
         "ext-pdo_pgsql": "*"
 
     },
