@@ -370,7 +370,7 @@ export default function ManagerDashboard({
         <>
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Control de asistencia</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Control horario</h1>
                 </div>
                 {hasActiveFilters && (
                     <div className="flex items-center gap-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700 shadow-sm">

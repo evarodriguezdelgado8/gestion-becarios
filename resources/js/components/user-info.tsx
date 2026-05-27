@@ -13,14 +13,20 @@ export function UserInfo({
 
     return (
         <>
-            <Avatar className="h-8 w-8 overflow-hidden rounded-full">                
-                <AvatarImage src={user.photo_url || user.avatar} alt={user.name} className="object-cover" />
-                <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+            <Avatar className="h-8 w-8 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/80">
+                <AvatarImage
+                    src={user.photo_url || user.avatar}
+                    alt={user.name}
+                    className="object-cover"
+                />
+                <AvatarFallback className="rounded-xl bg-emerald-50 font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
                     {getInitials(user.name)}
                 </AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
+            <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                <span className="truncate font-bold text-slate-900 dark:text-white">
+                    {user.name}
+                </span>
                 {showEmail && (
                     <span className="truncate text-xs text-muted-foreground">
                         {user.email}

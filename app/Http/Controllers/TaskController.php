@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\Models\Activity;
 
 
@@ -22,13 +23,18 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $internProfile = \App\Models\Intern::where('user_id', $user->id)->first();
+        abort_unless($user instanceof \App\Models\User, 403);
+
+        $internProfile = Intern::where('user_id', $user->id)->first();
 
         $tasks = Task::query()
             ->with(['intern:id,name,last_name,academic_cycle', 'creator:id,name', 'media', 'comments'])
             
             ->when($internProfile, function ($query) use ($internProfile) {
                 $query->where('intern_id', $internProfile->id);
+            })
+            ->when(! $internProfile && $this->isTutorOnly($user), function ($query) use ($user) {
+                $query->whereHas('intern', fn ($internQuery) => $internQuery->where('tutor_id', $user->id));
             })
 
             ->when($request->input('search'), function ($query, $search) {
@@ -83,8 +89,8 @@ class TaskController extends Controller
 
         return Inertia::render('tareas/index', [
             'kanban'  => $kanban,
-            'interns' => Intern::all(['id', 'name', 'last_name', 'center_id', 'academic_cycle']),
-            'centers' => Center::all(['id', 'name']),
+            'interns' => $this->scopedInternsQuery($user)->get(['id', 'name', 'last_name', 'center_id', 'academic_cycle']),
+            'centers' => $this->scopedCentersQuery($user)->get(['id', 'name']),
             'filters' => $request->only(['search', 'center_id', 'intern_id', 'priority', 'academic_cycle', 'due_date']),
         ]);
     }
@@ -103,6 +109,7 @@ class TaskController extends Controller
     public function store(TaskRequest $request)
     {
         $validated = $request->validated();
+        $this->ensureInternsAreAssignable($validated['intern_ids']);
         
         $status = $request->input('status', 'pending');
 
@@ -141,6 +148,8 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
+        $this->authorizeTaskAccess($task);
+
         $task->load(['intern', 'creator', 'comments.user']);
 
         $activityLog = Activity::forSubject($task)
@@ -161,8 +170,8 @@ class TaskController extends Controller
 
         return Inertia::render('tareas/show', [
             'task' => $task->load(['intern', 'creator', 'comments.user']),
-            'interns' => \App\Models\Intern::all(),
-            'centers' => \App\Models\Center::all(),
+            'interns' => $this->scopedInternsQuery(Auth::user())->get(),
+            'centers' => $this->scopedCentersQuery(Auth::user())->get(),
             'activityLog' => $activityLog, 
             'documents' => [
                 'specifications' => $task->getFirstMediaUrl('specifications'),
@@ -237,7 +246,10 @@ class TaskController extends Controller
     public function update(TaskRequest $request, $id)
     {
         $task = Task::findOrFail($id);
+        $this->authorizeTaskAccess($task);
+
         $validated = $request->validated();
+        $this->ensureInternsAreAssignable($validated['intern_ids'] ?? []);
         $user = Auth::user();
     
         DB::transaction(function () use ($validated, $task, $user) {
@@ -287,6 +299,8 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
+        $this->authorizeTaskAccess($task);
+
         $task->delete();
         return Redirect::back()->with('success', 'Tarea eliminada.');
     }
@@ -296,6 +310,8 @@ class TaskController extends Controller
      */
     public function updateStatus(Request $request, Task $task)
     {
+        $this->authorizeTaskAccess($task);
+
         $request->validate([
             'status' => 'required|in:pending,in_progress,in_review,completed,rejected',
             'new_index' => 'required|integer'
@@ -343,6 +359,8 @@ class TaskController extends Controller
      */
     public function storeComment(Request $request, Task $task)
     {
+        $this->authorizeTaskAccess($task);
+
         $request->validate([
             'body' => 'required|string',
             'deliverable' => 'nullable|file|max:10240',
@@ -377,6 +395,8 @@ class TaskController extends Controller
 
     public function storeDelivery(Request $request, Task $task)
     {
+        $this->authorizeTaskAccess($task);
+
         $request->validate([
             'deliverable' => 'required|file|max:20480',
         ]);
@@ -396,8 +416,75 @@ class TaskController extends Controller
         return redirect()->back()->with('success', 'Archivo entregado correctamente.');
     }
 
+    private function isTutorOnly(\App\Models\User $user): bool
+    {
+        return $user->hasRole('tutor') && ! $user->hasRole('admin');
+    }
+
+    private function scopedInternsQuery(?\App\Models\User $user)
+    {
+        abort_unless($user instanceof \App\Models\User, 403);
+
+        return Intern::query()
+            ->when($this->isTutorOnly($user), fn ($query) => $query->where('tutor_id', $user->id))
+            ->when($user->hasRole('intern'), fn ($query) => $query->where('user_id', $user->id));
+    }
+
+    private function scopedCentersQuery(?\App\Models\User $user)
+    {
+        abort_unless($user instanceof \App\Models\User, 403);
+
+        if ($user->hasRole('admin')) {
+            return Center::query()->orderBy('name');
+        }
+
+        return Center::query()
+            ->whereHas('interns', fn ($query) => $query->whereIn('id', $this->scopedInternsQuery($user)->pluck('id')))
+            ->orderBy('name');
+    }
+
+    private function ensureInternsAreAssignable(array $internIds): void
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof \App\Models\User && $user->hasAnyRole(['admin', 'tutor']), 403);
+
+        $allowedCount = $this->scopedInternsQuery($user)
+            ->whereIn('id', $internIds)
+            ->count();
+
+        if ($allowedCount !== count(array_unique($internIds))) {
+            throw ValidationException::withMessages([
+                'intern_ids' => 'Solo puedes asignar tareas a tus becarios.',
+            ]);
+        }
+    }
+
+    private function authorizeTaskAccess(Task $task): void
+    {
+        $user = Auth::user();
+        abort_unless($user instanceof \App\Models\User, 403);
+
+        if ($user->hasRole('admin')) {
+            return;
+        }
+
+        $task->loadMissing('intern');
+
+        if ($user->hasRole('tutor')) {
+            abort_unless((int) $task->intern?->tutor_id === (int) $user->id, 403);
+
+            return;
+        }
+
+        if ($user->hasRole('intern')) {
+            abort_unless((int) $task->intern?->user_id === (int) $user->id, 403);
+
+            return;
+        }
+
+        abort(403);
+    }
 
 }
-
 
 

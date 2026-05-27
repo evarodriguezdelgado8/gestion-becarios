@@ -1,12 +1,13 @@
 import { Link, usePage } from '@inertiajs/react';
-import { 
-    LayoutGrid, 
-    School, 
-    Users, 
-    CheckSquare, 
-    Clock, 
+import {
+    CheckSquare,
+    Clock,
+    FileText,
     GraduationCap,
-    ShieldCheck // Nuevo icono para permisos
+    LayoutGrid,
+    School,
+    ShieldCheck,
+    Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -23,10 +24,9 @@ import {
 } from '@/components/ui/sidebar';
 import type { NavItem } from '@/types';
 
-// Definimos un tipo extendido para incluir los permisos opcionales
 interface SidebarNavItem extends NavItem {
     permission?: string;
-    role?: string; // Añadimos soporte para filtrar por rol directamente si es necesario
+    role?: string;
 }
 
 const footerNavItems: SidebarNavItem[] = [];
@@ -35,7 +35,9 @@ export function AppSidebar() {
     const { auth } = usePage().props as any;
     const userPermissions = auth.user?.permissions || [];
     const userRoles = auth.user?.roles || [];
-    const userRoleNames = userRoles.map((role: any) => (typeof role === 'object' ? role.name : role));
+    const userRoleNames = userRoles.map((role: any) =>
+        typeof role === 'object' ? role.name : role,
+    );
 
     const allNavItems: SidebarNavItem[] = [
         {
@@ -47,16 +49,16 @@ export function AppSidebar() {
             title: 'Centros Educativos',
             href: '/centros',
             icon: School,
-            permission: 'view centers', 
+            permission: 'view centers',
         },
         {
-            title: 'Gestión de Becarios',
+            title: 'Gestion de Becarios',
             href: '/becarios',
             icon: Users,
             permission: 'view interns',
         },
         {
-            title: 'Prácticas y Tareas',
+            title: 'Practicas y Tareas',
             href: '/tareas',
             icon: CheckSquare,
             permission: 'view own tasks',
@@ -68,18 +70,17 @@ export function AppSidebar() {
             permission: 'view own tasks',
         },
         {
-            title: 'Evaluación y Notas',
+            title: 'Evaluacion y Notas',
             href: '/evaluaciones',
             icon: GraduationCap,
             role: 'tutor',
         },
         {
-            title: 'Evaluación y Notas',
+            title: 'Evaluacion y Notas',
             href: '/evaluaciones',
             icon: GraduationCap,
             role: 'admin',
         },
-        // --- SECCIÓN DE ADMINISTRACIÓN ---
         {
             title: 'Mis Evaluaciones',
             href: '/mis-evaluaciones',
@@ -87,29 +88,48 @@ export function AppSidebar() {
             role: 'intern',
         },
         {
+            title: 'Reportes',
+            href: '/reportes',
+            icon: FileText,
+            role: 'tutor',
+        },
+        {
+            title: 'Reportes',
+            href: '/reportes',
+            icon: FileText,
+            role: 'admin',
+        },
+        {
             title: 'Roles y Permisos',
             href: '/admin',
             icon: ShieldCheck,
             role: 'admin',
-        }
+        },
     ];
 
     const filteredNavItems = allNavItems.filter((item) => {
-        // 1. Si tiene restricción de rol (como la matriz de permisos)
         if (item.role && !userRoleNames.includes(item.role)) return false;
-        
-        // 2. Si tiene restricción de permiso
-        if (item.permission && !userPermissions.includes(item.permission)) return false;
-        
+
+        if (item.permission && !userPermissions.includes(item.permission))
+            return false;
+
         return true;
     });
 
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
+        <Sidebar
+            collapsible="icon"
+            variant="inset"
+            className="[&_[data-sidebar=sidebar]]:rounded-2xl [&_[data-sidebar=sidebar]]:border [&_[data-sidebar=sidebar]]:border-sidebar-border/80 [&_[data-sidebar=sidebar]]:shadow-xl [&_[data-sidebar=sidebar]]:shadow-slate-200/60 dark:[&_[data-sidebar=sidebar]]:shadow-none"
+        >
+            <SidebarHeader className="border-b border-sidebar-border/70 px-3 py-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-1.5">
+                <SidebarMenu className="group-data-[collapsible=icon]:items-center">
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
+                        <SidebarMenuButton
+                            size="lg"
+                            asChild
+                            className="h-13 rounded-2xl px-2 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 hover:bg-white/70 data-[state=open]:bg-white/80"
+                        >
                             <Link href="/dashboard" prefetch>
                                 <AppLogo />
                             </Link>
@@ -118,11 +138,11 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent>
+            <SidebarContent className="px-1 py-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-1.5">
                 <NavMain items={filteredNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
+            <SidebarFooter className="border-t border-sidebar-border/70 px-3 py-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-1.5">
                 <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>

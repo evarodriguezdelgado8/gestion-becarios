@@ -37,13 +37,31 @@ interface Props {
 }
 
 export default function RolesIndex({ roles, allPermissions }: Props) {
-    const translatedPermissions = allPermissions.filter((permission) => permissionTranslations[permission.name]);
+    const translatedPermissions = allPermissions.filter(
+        (permission) => permissionTranslations[permission.name],
+    );
     const getGroupedPermissions = () => {
         return {
-            'Centros Educativos': translatedPermissions.filter(p => p.name.includes('center')),
-            'Becarios': translatedPermissions.filter(p => p.name.includes('intern')),
-            'Gestión de Tareas': allPermissions.filter(p => p.name.includes('task') || p.name.includes('deliverable') || p.name.includes('specification')),
-            'Evaluación y Sistema': allPermissions.filter(p => !p.name.includes('center') && !p.name.includes('intern') && !p.name.includes('task') && !p.name.includes('deliverable') && !p.name.includes('specification')),
+            'Centros Educativos': translatedPermissions.filter((p) =>
+                p.name.includes('center'),
+            ),
+            Becarios: translatedPermissions.filter((p) =>
+                p.name.includes('intern'),
+            ),
+            'Gestión de Tareas': allPermissions.filter(
+                (p) =>
+                    p.name.includes('task') ||
+                    p.name.includes('deliverable') ||
+                    p.name.includes('specification'),
+            ),
+            'Evaluación y Sistema': allPermissions.filter(
+                (p) =>
+                    !p.name.includes('center') &&
+                    !p.name.includes('intern') &&
+                    !p.name.includes('task') &&
+                    !p.name.includes('deliverable') &&
+                    !p.name.includes('specification'),
+            ),
         };
     };
 
@@ -52,71 +70,118 @@ export default function RolesIndex({ roles, allPermissions }: Props) {
     return (
         <AppLayout>
             <Head title="Matriz de Permisos" />
-            
+
             <div className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">
-                
-                <div>
+                <div className="space-y-6">
                     <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Matriz de Roles y Permisos</h1>
-                            <p className="text-slate-500 text-sm mt-1">Configuración técnica de accesos para los perfiles del sistema.</p>
+                            <h1 className="text-2xl font-bold tracking-tight text-slate-800">
+                                Matriz de Roles y Permisos
+                            </h1>
+                            
                         </div>
-                        <div className="text-xs font-medium text-slate-400 bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-200">
+                        <div className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 shadow-sm">
                             Sincronización automática activada
                         </div>
                     </div>
 
                     <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xl">
+                        <div className="border-b border-slate-100 px-5 py-4">
+                            <h2 className="text-lg font-black text-slate-900">
+                                Permisos por rol
+                            </h2>
+                            <p className="mt-1 text-sm text-slate-500">
+                                Activa o desactiva capacidades de forma
+                                individual.
+                            </p>
+                        </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[900px] text-left border-collapse table-fixed">
+                            <table className="w-full min-w-[900px] table-fixed border-collapse text-left">
                                 <thead>
-                                    <tr className="bg-slate-800 border-b border-slate-700">
-                                        <th className="p-4 text-[11px] font-bold text-slate-300 uppercase tracking-widest w-[35%]">
+                                    <tr className="border-b border-slate-700 bg-slate-800">
+                                        <th className="w-[35%] p-4 text-[11px] font-bold tracking-widest text-slate-300 uppercase">
                                             Capacidad / Acción
                                         </th>
                                         {roles.map((role) => (
-                                            <th key={role.id} className="p-4 text-center border-l border-slate-700">
-                                                <span className="text-xs font-black text-white uppercase tracking-wider">
-                                                    {role.name.toLowerCase() === 'intern' ? 'Becario' : role.name}
+                                            <th
+                                                key={role.id}
+                                                className="border-l border-slate-700 p-4 text-center"
+                                            >
+                                                <span className="text-xs font-black tracking-wider text-white uppercase">
+                                                    {role.name.toLowerCase() ===
+                                                    'intern'
+                                                        ? 'Becario'
+                                                        : role.name}
                                                 </span>
                                             </th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody className="text-sm">
-                                    {Object.entries(grouped).map(([sectionTitle, permissions]) => (
-                                        permissions.length > 0 && (
-                                            <React.Fragment key={sectionTitle}>
-                                                {/* Separador de sección con contraste */}
-                                                <tr>
-                                                    <td colSpan={roles.length + 1} className="bg-slate-200/70 p-2.5 pl-6 font-bold text-slate-600 text-[10px] uppercase tracking-[0.15em] border-y border-slate-200">
-                                                        {sectionTitle}
-                                                    </td>
-                                                </tr>
-                                                {permissions.map((permission, index) => (
-                                                    <tr 
-                                                        key={permission.id} 
-                                                        className={`hover:bg-blue-50/50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}
-                                                    >
-                                                        <td className="p-4 pl-8 border-b border-slate-100">
-                                                            <div className="flex flex-col">
-                                                                <span className="text-slate-800 font-semibold text-[15px]">
-                                                                    {permissionTranslations[permission.name]}
-                                                                </span>
-                                                            </div>
+                                    {Object.entries(grouped).map(
+                                        ([sectionTitle, permissions]) =>
+                                            permissions.length > 0 && (
+                                                <React.Fragment
+                                                    key={sectionTitle}
+                                                >
+                                                    {/* Separador de sección con contraste */}
+                                                    <tr>
+                                                        <td
+                                                            colSpan={
+                                                                roles.length + 1
+                                                            }
+                                                            className="border-y border-slate-200 bg-slate-200/70 p-2.5 pl-6 text-[10px] font-bold tracking-[0.15em] text-slate-600 uppercase"
+                                                        >
+                                                            {sectionTitle}
                                                         </td>
-                                                        {roles.map((role) => (
-                                                            <td key={role.id} className="p-4 text-center border-b border-slate-100 border-l border-slate-100">
-                                                                <div className="flex justify-center items-center">
-                                                                    <PermissionToggle role={role} permission={permission} />
-                                                                </div>
-                                                            </td>
-                                                        ))}
                                                     </tr>
-                                                ))}
-                                            </React.Fragment>
-                                        )
-                                    ))}
+                                                    {permissions.map(
+                                                        (permission, index) => (
+                                                            <tr
+                                                                key={
+                                                                    permission.id
+                                                                }
+                                                                className={`transition-colors hover:bg-blue-50/50 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}
+                                                            >
+                                                                <td className="border-b border-slate-100 p-4 pl-8">
+                                                                    <div className="flex flex-col">
+                                                                        <span className="text-[15px] font-semibold text-slate-800">
+                                                                            {
+                                                                                permissionTranslations[
+                                                                                    permission
+                                                                                        .name
+                                                                                ]
+                                                                            }
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+                                                                {roles.map(
+                                                                    (role) => (
+                                                                        <td
+                                                                            key={
+                                                                                role.id
+                                                                            }
+                                                                            className="border-b border-l border-slate-100 p-4 text-center"
+                                                                        >
+                                                                            <div className="flex items-center justify-center">
+                                                                                <PermissionToggle
+                                                                                    role={
+                                                                                        role
+                                                                                    }
+                                                                                    permission={
+                                                                                        permission
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                        </td>
+                                                                    ),
+                                                                )}
+                                                            </tr>
+                                                        ),
+                                                    )}
+                                                </React.Fragment>
+                                            ),
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -127,31 +192,38 @@ export default function RolesIndex({ roles, allPermissions }: Props) {
     );
 }
 
-function PermissionToggle({ role, permission }: { role: Role; permission: Permission }) {
+function PermissionToggle({
+    role,
+    permission,
+}: {
+    role: Role;
+    permission: Permission;
+}) {
     const hasPermission = role.permissions.some((p) => p.id === permission.id);
 
     const handleToggle = (checked: boolean) => {
-        const currentNames = role.permissions.map(p => p.name);
-        const newPermissions = checked 
+        const currentNames = role.permissions.map((p) => p.name);
+        const newPermissions = checked
             ? [...currentNames, permission.name]
-            : currentNames.filter(name => name !== permission.name);
+            : currentNames.filter((name) => name !== permission.name);
 
-        router.post(`/admin/roles/${role.id}`, 
+        router.post(
+            `/admin/roles/${role.id}`,
             { permissions: newPermissions },
             {
                 preserveScroll: true,
                 onSuccess: () => toast.success(`Permiso actualizado`),
-                onError: () => toast.error("Error al sincronizar")
-            }
+                onError: () => toast.error('Error al sincronizar'),
+            },
         );
     };
 
     return (
-        <Checkbox 
-            checked={hasPermission} 
+        <Checkbox
+            checked={hasPermission}
             onCheckedChange={(checked) => handleToggle(!!checked)}
             // Checkbox tamaño estándar profesional
-            className="h-5 w-5 rounded border-slate-300 data-[state=checked]:bg-blue-700 data-[state=checked]:border-blue-700 transition-all shadow-sm"
+            className="h-5 w-5 rounded border-slate-300 shadow-sm transition-all data-[state=checked]:border-blue-700 data-[state=checked]:bg-blue-700"
         />
     );
 }

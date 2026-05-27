@@ -10,6 +10,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Illuminate\Support\Facades\Cache;
 
 class Task extends Model implements HasMedia
 {
@@ -43,6 +44,17 @@ class Task extends Model implements HasMedia
         'due_date' => 'date:Y-m-d',
         'completed_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => self::refreshDashboardCache());
+        static::deleted(fn () => self::refreshDashboardCache());
+    }
+
+    private static function refreshDashboardCache(): void
+    {
+        Cache::forever('dashboard.version', ((int) Cache::get('dashboard.version', 1)) + 1);
+    }
 
     public function creator(): BelongsTo {
         return $this->belongsTo(User::class, 'creator_id');
