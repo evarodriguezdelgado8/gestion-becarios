@@ -13,23 +13,23 @@ import type { NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
-        href: edit(),
+        title: 'Perfil',
+        href: toUrl(edit()),
         icon: null,
     },
     {
-        title: 'Password',
-        href: editPassword(),
+        title: 'Contraseña',
+        href: toUrl(editPassword()),
         icon: null,
     },
     {
-        title: 'Two-factor auth',
-        href: show(),
+        title: 'Autenticación en dos pasos',
+        href: toUrl(show()),
         icon: null,
     },
     {
-        title: 'Appearance',
-        href: editAppearance(),
+        title: 'Apariencia',
+        href: toUrl(editAppearance()),
         icon: null,
     },
 ];
@@ -45,29 +45,29 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     return (
         <div className="px-4 py-6">
             <Heading
-                title="Settings"
-                description="Manage your profile and account settings"
+                title="Configuración"
+                description="Gestiona tu perfil y los ajustes de tu cuenta"
             />
 
-            <div className="flex flex-col lg:flex-row lg:space-x-12">
+            <div className="flex flex-col lg:flex-row lg:space-x-12 mt-6">
                 <aside className="w-full max-w-xl lg:w-48">
                     <nav
                         className="flex flex-col space-y-1 space-x-0"
-                        aria-label="Settings"
+                        aria-label="Ajustes de cuenta"
                     >
                         {sidebarNavItems.map((item, index) => (
                             <Button
-                                key={`${toUrl(item.href)}-${index}`}
+                                key={`${item.href}-${index}`}
                                 size="sm"
                                 variant="ghost"
                                 asChild
                                 className={cn('w-full justify-start', {
-                                    'bg-muted': isCurrentOrParentUrl(item.href),
+                                    'bg-muted font-medium': isCurrentOrParentUrl(item.href),
                                 })}
                             >
                                 <Link href={item.href}>
                                     {item.icon && (
-                                        <item.icon className="h-4 w-4" />
+                                        <item.icon className="h-4 w-4 mr-2" />
                                     )}
                                     {item.title}
                                 </Link>

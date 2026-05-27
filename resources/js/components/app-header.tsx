@@ -43,7 +43,7 @@ type Props = {
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: toUrl(dashboard()),
         icon: LayoutGrid,
     },
 ];

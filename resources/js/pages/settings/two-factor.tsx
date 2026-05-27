@@ -19,7 +19,7 @@ type Props = {
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Two-factor authentication',
+        title: 'Autenticación en dos pasos',
         href: show(),
     },
 ];
@@ -42,25 +42,24 @@ export default function TwoFactor({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Two-factor authentication" />
-
-            <h1 className="sr-only">Two-factor authentication settings</h1>
+            <Head title="Autenticación en dos pasos" />
+            <h1 className="sr-only">Ajustes de autenticación en dos pasos</h1>
 
             <SettingsLayout>
                 <div className="space-y-6">
                     <Heading
                         variant="small"
-                        title="Two-factor authentication"
-                        description="Manage your two-factor authentication settings"
+                        title="Autenticación en dos pasos"
+                        description="Gestiona los ajustes de seguridad de tu cuenta"
                     />
+                    
                     {twoFactorEnabled ? (
                         <div className="flex flex-col items-start justify-start space-y-4">
-                            <Badge variant="default">Enabled</Badge>
-                            <p className="text-muted-foreground">
-                                With two-factor authentication enabled, you will
-                                be prompted for a secure, random pin during
-                                login, which you can retrieve from the
-                                TOTP-supported application on your phone.
+                            <Badge variant="default">Activado</Badge>
+                            <p className="text-muted-foreground text-sm">
+                                Con la autenticación de dos pasos activada, se te solicitará un pin seguro 
+                                y aleatorio durante el inicio de sesión, el cual puedes obtener desde la 
+                                aplicación compatible con TOTP en tu teléfono.
                             </p>
 
                             <TwoFactorRecoveryCodes
@@ -69,52 +68,33 @@ export default function TwoFactor({
                                 errors={errors}
                             />
 
-                            <div className="relative inline">
-                                <Form {...disable.form()}>
-                                    {({ processing }) => (
-                                        <Button
-                                            variant="destructive"
-                                            type="submit"
-                                            disabled={processing}
-                                        >
-                                            <ShieldBan /> Disable 2FA
-                                        </Button>
-                                    )}
-                                </Form>
-                            </div>
+                            <Form {...disable.form()}>
+                                {({ processing }) => (
+                                    <Button variant="destructive" type="submit" disabled={processing}>
+                                        <ShieldBan className="mr-2 h-4 w-4" /> Desactivar 2FA
+                                    </Button>
+                                )}
+                            </Form>
                         </div>
                     ) : (
                         <div className="flex flex-col items-start justify-start space-y-4">
-                            <Badge variant="destructive">Disabled</Badge>
-                            <p className="text-muted-foreground">
-                                When you enable two-factor authentication, you
-                                will be prompted for a secure pin during login.
-                                This pin can be retrieved from a TOTP-supported
-                                application on your phone.
+                            <Badge variant="destructive">Desactivado</Badge>
+                            <p className="text-muted-foreground text-sm">
+                                Cuando activas la autenticación de dos pasos, se te solicitará un pin seguro 
+                                durante el inicio de sesión. Puedes obtener este pin desde una aplicación 
+                                compatible con TOTP en tu teléfono.
                             </p>
 
                             <div>
                                 {hasSetupData ? (
-                                    <Button
-                                        onClick={() => setShowSetupModal(true)}
-                                    >
-                                        <ShieldCheck />
-                                        Continue setup
+                                    <Button onClick={() => setShowSetupModal(true)}>
+                                        <ShieldCheck className="mr-2 h-4 w-4" /> Continuar configuración
                                     </Button>
                                 ) : (
-                                    <Form
-                                        {...enable.form()}
-                                        onSuccess={() =>
-                                            setShowSetupModal(true)
-                                        }
-                                    >
+                                    <Form {...enable.form()} onSuccess={() => setShowSetupModal(true)}>
                                         {({ processing }) => (
-                                            <Button
-                                                type="submit"
-                                                disabled={processing}
-                                            >
-                                                <ShieldCheck />
-                                                Enable 2FA
+                                            <Button type="submit" disabled={processing}>
+                                                <ShieldCheck className="mr-2 h-4 w-4" /> Activar 2FA
                                             </Button>
                                         )}
                                     </Form>
