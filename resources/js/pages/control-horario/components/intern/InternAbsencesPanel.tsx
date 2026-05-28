@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { Clock, FileText, Plus } from 'lucide-react';
-import {  useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type {FormEvent} from 'react';
 import { toast } from 'sonner';
 
@@ -25,15 +25,12 @@ export default function InternAbsencesPanel({ absences }: InternAbsencesPanelPro
     });
 
     const totalPages = Math.max(1, Math.ceil(absences.length / ABSENCES_PER_PAGE));
+    const currentSafePage = Math.min(currentPage, totalPages);
     const paginatedAbsences = useMemo(() => {
-        const startIndex = (currentPage - 1) * ABSENCES_PER_PAGE;
+        const startIndex = (currentSafePage - 1) * ABSENCES_PER_PAGE;
 
         return absences.slice(startIndex, startIndex + ABSENCES_PER_PAGE);
-    }, [absences, currentPage]);
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [absences.length]);
+    }, [absences, currentSafePage]);
 
     const handleAbsenceSubmit = (event: FormEvent) => {
         event.preventDefault();
@@ -43,6 +40,7 @@ export default function InternAbsencesPanel({ absences }: InternAbsencesPanelPro
             onSuccess: () => {
                 absenceForm.reset();
                 setShowAbsenceForm(false);
+                setCurrentPage(1);
                 toast.success('Solicitud de ausencia enviada');
             },
             onError: () => toast.error('No se pudo enviar la solicitud de ausencia'),
@@ -144,12 +142,12 @@ export default function InternAbsencesPanel({ absences }: InternAbsencesPanelPro
                         {totalPages > 1 && (
                             <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/70 px-4 py-4 text-sm md:flex-row">
                                 <p className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-500 shadow-sm ring-1 ring-slate-100">
-                                    Página {currentPage} de {totalPages}
+                                    Página {currentSafePage} de {totalPages}
                                 </p>
                                 <div className="inline-flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                                     <button
                                         type="button"
-                                        disabled={currentPage === 1}
+                                        disabled={currentSafePage === 1}
                                         onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                                         className="cursor-pointer border-r border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
@@ -157,7 +155,7 @@ export default function InternAbsencesPanel({ absences }: InternAbsencesPanelPro
                                     </button>
                                     <button
                                         type="button"
-                                        disabled={currentPage === totalPages}
+                                        disabled={currentSafePage === totalPages}
                                         onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
                                         className="cursor-pointer px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                                     >

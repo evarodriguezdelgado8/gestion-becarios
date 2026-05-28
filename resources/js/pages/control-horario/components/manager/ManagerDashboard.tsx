@@ -128,6 +128,7 @@ export default function ManagerDashboard({
         if (selectedSingleBecario) {
             scheduleForm.setData('days', scheduleDaysFromBecario(selectedSingleBecario));
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedSingleBecario?.id]);
 
     const applyFilters = (newFilters: any) => {

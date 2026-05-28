@@ -1,4 +1,3 @@
-import { useMemo, useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -12,6 +11,7 @@ import {
     TrendingUp,
     Users,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import {
     Bar,
     BarChart,

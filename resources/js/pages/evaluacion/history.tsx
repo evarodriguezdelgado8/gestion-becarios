@@ -111,11 +111,12 @@ export default function HistoryPage({ becarios, evaluaciones }: Props) {
         [filteredEvaluations],
     );
     const totalPages = Math.max(1, Math.ceil(filteredEvaluations.length / EVALUATIONS_PER_PAGE));
+    const currentSafePage = Math.min(currentPage, totalPages);
     const paginatedEvaluations = useMemo(() => {
-        const startIndex = (currentPage - 1) * EVALUATIONS_PER_PAGE;
+        const startIndex = (currentSafePage - 1) * EVALUATIONS_PER_PAGE;
 
         return filteredEvaluations.slice(startIndex, startIndex + EVALUATIONS_PER_PAGE);
-    }, [currentPage, filteredEvaluations]);
+    }, [currentSafePage, filteredEvaluations]);
 
     const shouldShowEvolution = selectedInterns.length === 1;
     const average =
@@ -137,11 +138,8 @@ export default function HistoryPage({ becarios, evaluaciones }: Props) {
         setSelectedInterns([]);
         setSelectedTypes([]);
         setPeriod('');
-    };
-
-    useEffect(() => {
         setCurrentPage(1);
-    }, [period, selectedInterns, selectedTypes]);
+    };
 
     const confirmDelete = () => {
         if (!deleteTarget) return;
@@ -192,19 +190,38 @@ export default function HistoryPage({ becarios, evaluaciones }: Props) {
                     <div className="grid grid-cols-1 items-end gap-4 lg:grid-cols-4">
                         <div className="space-y-1.5">
                             <label className="ml-1 text-[11px] font-bold uppercase text-slate-400">Becario</label>
-                            <MultiSelect options={internOptions} selected={selectedInterns} onChange={setSelectedInterns} placeholder="Todos los becarios" />
+                            <MultiSelect
+                                options={internOptions}
+                                selected={selectedInterns}
+                                onChange={(value) => {
+                                    setSelectedInterns(value);
+                                    setCurrentPage(1);
+                                }}
+                                placeholder="Todos los becarios"
+                            />
                         </div>
 
                         <div className="space-y-1.5">
                             <label className="ml-1 text-[11px] font-bold uppercase text-slate-400">Tipo</label>
-                            <MultiSelect options={typeOptions} selected={selectedTypes} onChange={setSelectedTypes} placeholder="Todos los tipos" />
+                            <MultiSelect
+                                options={typeOptions}
+                                selected={selectedTypes}
+                                onChange={(value) => {
+                                    setSelectedTypes(value);
+                                    setCurrentPage(1);
+                                }}
+                                placeholder="Todos los tipos"
+                            />
                         </div>
 
                         <div className="space-y-1.5">
                             <label className="ml-1 text-[11px] font-bold uppercase text-slate-400">Periodo</label>
                             <input
                                 value={period}
-                                onChange={(event) => setPeriod(event.target.value)}
+                                onChange={(event) => {
+                                    setPeriod(event.target.value);
+                                    setCurrentPage(1);
+                                }}
                                 className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
                                 placeholder="Semana 20, Mayo 2026..."
                             />
@@ -290,12 +307,12 @@ export default function HistoryPage({ becarios, evaluaciones }: Props) {
                                 {totalPages > 1 && (
                                     <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/70 px-4 py-4 text-sm md:flex-row">
                                         <p className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-500 shadow-sm ring-1 ring-slate-100">
-                                            Pagina {currentPage} de {totalPages}
+                                            Pagina {currentSafePage} de {totalPages}
                                         </p>
                                         <div className="inline-flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                                             <button
                                                 type="button"
-                                                disabled={currentPage === 1}
+                                                disabled={currentSafePage === 1}
                                                 onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                                                 className="cursor-pointer border-r border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                                             >
@@ -303,7 +320,7 @@ export default function HistoryPage({ becarios, evaluaciones }: Props) {
                                             </button>
                                             <button
                                                 type="button"
-                                                disabled={currentPage === totalPages}
+                                                disabled={currentSafePage === totalPages}
                                                 onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
                                                 className="cursor-pointer px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                                             >

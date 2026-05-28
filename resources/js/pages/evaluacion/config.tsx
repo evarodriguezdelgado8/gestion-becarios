@@ -208,18 +208,9 @@ export default function Config({ categories }: { categories: Category[] }) {
         [categories, categoryTypeFilter],
     );
     const totalCategoryPages = Math.max(1, Math.ceil(filteredCategories.length / categoriesPerPage));
-    const paginatedCategories = filteredCategories.slice((categoriesPage - 1) * categoriesPerPage, categoriesPage * categoriesPerPage);
+    const currentCategoryPage = Math.min(categoriesPage, totalCategoryPages);
+    const paginatedCategories = filteredCategories.slice((currentCategoryPage - 1) * categoriesPerPage, currentCategoryPage * categoriesPerPage);
     const managedCategory = categories.find((category) => category.id === managedCategoryId);
-
-    useEffect(() => {
-        setCategoriesPage(1);
-    }, [categoryTypeFilter, categories.length]);
-
-    useEffect(() => {
-        if (categoriesPage > totalCategoryPages) {
-            setCategoriesPage(totalCategoryPages);
-        }
-    }, [categoriesPage, totalCategoryPages]);
 
     useEffect(() => {
         if (!managedCategory) return;
@@ -303,7 +294,10 @@ export default function Config({ categories }: { categories: Category[] }) {
                                         <button
                                             key={type.value}
                                             type="button"
-                                            onClick={() => setCategoryTypeFilter(type.value)}
+                                            onClick={() => {
+                                                setCategoryTypeFilter(type.value);
+                                                setCategoriesPage(1);
+                                            }}
                                             className={`rounded-xl px-3 py-2 text-xs font-black transition ${
                                                 isActive
                                                     ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
@@ -390,13 +384,13 @@ export default function Config({ categories }: { categories: Category[] }) {
                                 {totalCategoryPages > 1 && (
                                     <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/70 px-4 py-4 text-sm md:flex-row">
                                         <p className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-500 shadow-sm ring-1 ring-slate-100">
-                                            Pagina {categoriesPage} de {totalCategoryPages}
+                                            Pagina {currentCategoryPage} de {totalCategoryPages}
                                         </p>
                                         <div className="inline-flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                                             <button
                                                 type="button"
                                                 onClick={() => setCategoriesPage((page) => Math.max(1, page - 1))}
-                                                disabled={categoriesPage === 1}
+                                                disabled={currentCategoryPage === 1}
                                                 className="cursor-pointer border-r border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                                             >
                                                 Anterior
@@ -404,7 +398,7 @@ export default function Config({ categories }: { categories: Category[] }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setCategoriesPage((page) => Math.min(totalCategoryPages, page + 1))}
-                                                disabled={categoriesPage === totalCategoryPages}
+                                                disabled={currentCategoryPage === totalCategoryPages}
                                                 className="cursor-pointer px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                                             >
                                                 Siguiente

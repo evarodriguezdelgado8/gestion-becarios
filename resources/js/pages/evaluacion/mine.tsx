@@ -11,7 +11,7 @@ import {
     TrendingUp,
     UserCheck,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import ClearFiltersButton from '@/components/common/ClearFiltersButton';
@@ -200,15 +200,12 @@ export default function Mine({ intern, evaluaciones }: Props) {
             .filter(Boolean)
             .join(' ') || intern.name;
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [fromDate, period, selectedTypes, toDate]);
-
     const resetFilters = () => {
         setSelectedTypes([]);
         setPeriod('');
         setFromDate('');
         setToDate('');
+        setCurrentPage(1);
     };
 
     const toggleEvaluation = (evaluationId: number) => {
@@ -325,7 +322,10 @@ export default function Mine({ intern, evaluaciones }: Props) {
                                 <MultiSelect
                                     options={typeOptions}
                                     selected={selectedTypes}
-                                    onChange={setSelectedTypes}
+                                    onChange={(value) => {
+                                        setSelectedTypes(value);
+                                        setCurrentPage(1);
+                                    }}
                                     placeholder="Todos los tipos"
                                 />
                             </FilterField>
@@ -333,9 +333,10 @@ export default function Mine({ intern, evaluaciones }: Props) {
                             <FilterField label="Periodo">
                                 <input
                                     value={period}
-                                    onChange={(event) =>
-                                        setPeriod(event.target.value)
-                                    }
+                                    onChange={(event) => {
+                                        setPeriod(event.target.value);
+                                        setCurrentPage(1);
+                                    }}
                                     className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm transition outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
                                     placeholder="Semana 20, mayo..."
                                 />
@@ -345,9 +346,10 @@ export default function Mine({ intern, evaluaciones }: Props) {
                                 <input
                                     type="date"
                                     value={fromDate}
-                                    onChange={(event) =>
-                                        setFromDate(event.target.value)
-                                    }
+                                    onChange={(event) => {
+                                        setFromDate(event.target.value);
+                                        setCurrentPage(1);
+                                    }}
                                     className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm transition outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
                                 />
                             </FilterField>
@@ -356,9 +358,10 @@ export default function Mine({ intern, evaluaciones }: Props) {
                                 <input
                                     type="date"
                                     value={toDate}
-                                    onChange={(event) =>
-                                        setToDate(event.target.value)
-                                    }
+                                    onChange={(event) => {
+                                        setToDate(event.target.value);
+                                        setCurrentPage(1);
+                                    }}
                                     className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm transition outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50"
                                 />
                             </FilterField>

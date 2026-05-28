@@ -1,5 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
-import { BarChart3, CheckCircle2, Clock3, GraduationCap } from 'lucide-react';
+import { BarChart3, Clock3, GraduationCap } from 'lucide-react';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';

@@ -13,18 +13,17 @@ class TutorAssignmentSeeder extends Seeder
     {
         $tutors = collect([
             ['name' => 'Tutor Prueba', 'email' => 'tutor@ejemplo.com'],
-            ['name' => 'Laura Martín Tutor', 'email' => 'laura.tutor@gestion-becarios.test'],
+            ['name' => 'Laura Martin Tutor', 'email' => 'laura.tutor@gestion-becarios.test'],
             ['name' => 'Diego Santos Tutor', 'email' => 'diego.tutor@gestion-becarios.test'],
             ['name' => 'Marta Gil Tutor', 'email' => 'marta.tutor@gestion-becarios.test'],
         ])->map(function (array $data) {
-            $user = User::firstOrCreate(
-                ['email' => $data['email']],
-                [
-                    'name' => $data['name'],
-                    'password' => Hash::make('12345678'),
-                    'email_verified_at' => now(),
-                ],
-            );
+            $user = User::firstOrNew(['email' => $data['email']]);
+
+            $user->forceFill([
+                'name' => $data['name'],
+                'password' => $user->exists ? $user->password : Hash::make('12345678'),
+                'email_verified_at' => $user->email_verified_at ?? now(),
+            ])->save();
 
             if (! $user->hasRole('tutor')) {
                 $user->assignRole('tutor');

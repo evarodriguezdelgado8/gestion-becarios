@@ -1,4 +1,4 @@
-import { AlertTriangle, ListFilter } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 
