@@ -100,17 +100,19 @@ class DatabaseSeeder extends Seeder
             ['Claudia', 'Navas', '10000001A', 'claudia.navas@gestion-becarios.test', 'DAW', 'active', 1, 22, 160],
             ['Mario', 'Soler', '10000002B', 'mario.soler@gestion-becarios.test', 'DAM', 'active', 2, 30, 210],
             ['Irene', 'Vega', '10000003C', 'irene.vega@gestion-becarios.test', 'ASIR', 'active', 3, 26, 120],
-            ['Daniel', 'Cortes', '10000004D', 'daniel.cortes@gestion-becarios.test', 'DAW', 'finished', -24, -2, 400],
+            ['Daniel', 'Cortes', '10000004D', 'daniel.cortes@gestion-becarios.test', 'DAW', 'finished', 4, -2, 400],
             ['Nerea', 'Castro', '10000005E', 'nerea.castro@gestion-becarios.test', 'DAM', 'active', 4, 35, 90],
-            ['Hugo', 'Molina', '10000006F', 'hugo.molina@gestion-becarios.test', 'ASIR', 'abandoned', -18, 4, 60],
+            ['Hugo', 'Molina', '10000006F', 'hugo.molina@gestion-becarios.test', 'ASIR', 'abandoned', 0, 4, 60],
             ['Paula', 'Santos', '10000007G', 'paula.santos@gestion-becarios.test', 'DAW', 'active', 0, 12, 320],
             ['Adrian', 'Lopez', '10000008H', 'adrian.lopez@gestion-becarios.test', 'DAM', 'active', 1, 16, 250],
-            ['Sara', 'Martin', '10000009J', 'sara.martin@gestion-becarios.test', 'ASIR', 'finished', -30, -6, 400],
+            ['Sara', 'Martin', '10000009J', 'sara.martin@gestion-becarios.test', 'ASIR', 'finished', 4, -6, 400],
             ['Raul', 'Ortega', '10000010K', 'raul.ortega@gestion-becarios.test', 'DAW', 'active', 2, 20, 190],
             ['Elena', 'Prieto', '10000011L', 'elena.prieto@gestion-becarios.test', 'DAM', 'active', 3, 28, 140],
         ];
 
         foreach ($interns as $index => [$name, $lastName, $dni, $email, $cycle, $status, $centerIndex, $endWeeks, $hours]) {
+            $center = $centers->get($centerIndex) ?? $centers[$index % $centers->count()];
+
             $user = $this->seedUser(
                 $email,
                 trim($name.' '.$lastName),
@@ -122,7 +124,7 @@ class DatabaseSeeder extends Seeder
                 ['email' => $email],
                 [
                     'user_id' => $user->id,
-                    'center_id' => $centers[$centerIndex]->id,
+                    'center_id' => $center->id,
                     'name' => $name,
                     'last_name' => $lastName,
                     'dni' => $dni,
