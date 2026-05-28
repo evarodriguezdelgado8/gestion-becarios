@@ -5,13 +5,14 @@ namespace App\Exports;
 use App\Models\Intern;
 use App\Models\User;
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
-class InternsExport implements FromQuery, WithMapping, WithHeadings, ShouldAutoSize
+class InternsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping
 {
     protected $filters;
+
     protected ?User $user;
 
     public function __construct($filters = [], ?User $user = null)
@@ -22,7 +23,7 @@ class InternsExport implements FromQuery, WithMapping, WithHeadings, ShouldAutoS
 
     private function commaFilter(?string $value): array
     {
-        if (!$value) {
+        if (! $value) {
             return [];
         }
 
@@ -35,13 +36,13 @@ class InternsExport implements FromQuery, WithMapping, WithHeadings, ShouldAutoS
             ->with('center:id,name')
             ->when($this->user?->hasRole('tutor') && ! $this->user?->hasRole('admin'), fn ($query) => $query->where('tutor_id', $this->user->id));
 
-        if (!empty($this->filters['search'])) {
+        if (! empty($this->filters['search'])) {
             $search = $this->filters['search'];
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('last_name', 'ilike', "%{$search}%")
-                  ->orWhere('dni', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%");
+                    ->orWhere('last_name', 'ilike', "%{$search}%")
+                    ->orWhere('dni', 'ilike', "%{$search}%")
+                    ->orWhere('email', 'ilike', "%{$search}%");
             });
         }
 
@@ -55,16 +56,16 @@ class InternsExport implements FromQuery, WithMapping, WithHeadings, ShouldAutoS
             $query->whereIn('status', $statuses);
         }
 
-        if (!empty($this->filters['start_from'])) {
+        if (! empty($this->filters['start_from'])) {
             $query->whereDate('start_date', '>=', $this->filters['start_from']);
         }
-        if (!empty($this->filters['start_to'])) {
+        if (! empty($this->filters['start_to'])) {
             $query->whereDate('start_date', '<=', $this->filters['start_to']);
         }
-        if (!empty($this->filters['end_from'])) {
+        if (! empty($this->filters['end_from'])) {
             $query->whereDate('end_date', '>=', $this->filters['end_from']);
         }
-        if (!empty($this->filters['end_to'])) {
+        if (! empty($this->filters['end_to'])) {
             $query->whereDate('end_date', '<=', $this->filters['end_to']);
         }
 

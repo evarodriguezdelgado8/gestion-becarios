@@ -136,7 +136,7 @@ class EvaluationController extends Controller
 
         if (empty($validated['results'])) {
             throw ValidationException::withMessages([
-                'results' => 'Selecciona al menos una puntuaciÃ³n para guardar la evaluaciÃ³n.',
+                'results' => 'Selecciona al menos una puntuacion para guardar la evaluacion.',
             ]);
         }
 
@@ -311,7 +311,7 @@ class EvaluationController extends Controller
 
         if ($category->evaluation_type !== $validated['evaluation_type']) {
             throw ValidationException::withMessages([
-                'evaluation_category_id' => 'La categorÃ­a seleccionada no corresponde al tipo de evaluaciÃ³n elegido.',
+                'evaluation_category_id' => 'La categoria seleccionada no corresponde al tipo de evaluacion elegido.',
             ]);
         }
 
@@ -322,7 +322,7 @@ class EvaluationController extends Controller
 
         if (((float) $usedWeight + (float) $validated['weight']) > 100) {
             throw ValidationException::withMessages([
-                'weight' => 'El peso total de los criterios de esta categorÃ­a no puede superar el 100%.',
+                'weight' => 'El peso total de los criterios de esta categoria no puede superar el 100%.',
             ]);
         }
 

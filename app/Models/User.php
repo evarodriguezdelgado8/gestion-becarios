@@ -2,23 +2,20 @@
 
 namespace App\Models;
 
+use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use App\Models\TimeRegistry;
-use App\Models\Schedule;
-use App\Models\Absence;
-use App\Models\Intern;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements MustVerifyEmail, HasMedia
+class User extends Authenticatable implements HasMedia, MustVerifyEmail
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles, InteractsWithMedia;
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, HasRoles, InteractsWithMedia, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -57,7 +54,7 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('profile_photo')
-             ->singleFile();
+            ->singleFile();
     }
 
     /**
@@ -66,10 +63,11 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
      */
     public function getPhotoUrlAttribute(): ?string
     {
-        /*return $this->getFirstMediaUrl('profile_photo') 
+        /*return $this->getFirstMediaUrl('profile_photo')
             ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';*/
-            $url = $this->getFirstMediaUrl('profile_photo');
-            return $url ?: null;
+        $url = $this->getFirstMediaUrl('profile_photo');
+
+        return $url ?: null;
     }
 
     /**
@@ -85,7 +83,6 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
-
 
     // Relación con los horarios semanales
     public function schedules()
@@ -114,5 +111,4 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     {
         return $this->hasMany(Intern::class, 'tutor_id');
     }
-
 }

@@ -150,9 +150,9 @@ export default function InternForm({ data, setData, errors, processing, centers,
                     </div>
 
                     <div className="space-y-1.5">
-                        <Label required>Tutor asignado</Label>
+                        <Label>Tutor asignado</Label>
                         <select value={data.tutor_id} onChange={e => setData('tutor_id', e.target.value)} className={interactiveClasses(errors.tutor_id)}>
-                            <option value="">Seleccione un tutor</option>
+                            <option value="">Sin tutor asignado</option>
                             {tutors.map(tutor => (
                                 <option key={tutor.id} value={tutor.id}>{tutor.name}{tutor.email ? ` (${tutor.email})` : ''}</option>
                             ))}

@@ -1,9 +1,11 @@
 import { Form } from '@inertiajs/react';
+import { AlertTriangle } from 'lucide-react';
 import { useRef } from 'react';
+
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
     Dialog,
     DialogClose,
@@ -20,37 +22,38 @@ export default function DeleteUser() {
     const passwordInput = useRef<HTMLInputElement>(null);
 
     return (
-        <div className="space-y-6">
-            <Heading
-                variant="small"
-                title="Eliminar cuenta"
-                description="Elimina tu cuenta y todos sus recursos de forma permanente"
-            />
-            <div className="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
-                <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
-                    <p className="font-medium">Atención</p>
-                    <p className="text-sm">
-                        Por favor, procede con precaución. Esta acción no se puede deshacer.
+        <Card className="overflow-hidden rounded-3xl border-red-100 bg-white shadow-sm">
+            <div className="flex items-center gap-3 border-b border-red-100 px-6 py-5">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+                    <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                    <h2 className="font-black text-slate-900">Eliminar cuenta</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                        Esta acción elimina tu cuenta de forma permanente.
                     </p>
+                </div>
+            </div>
+
+            <div className="space-y-4 p-6">
+                <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    Una vez eliminada, no podrás recuperar esta cuenta ni sus datos
+                    asociados.
                 </div>
 
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button
-                            variant="destructive"
-                            data-test="delete-user-button"
-                        >
+                        <Button variant="destructive" className="rounded-xl" data-test="delete-user-button">
                             Eliminar cuenta
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="rounded-3xl">
                         <DialogTitle>
                             ¿Estás seguro de que deseas eliminar tu cuenta?
                         </DialogTitle>
                         <DialogDescription>
-                            Una vez que tu cuenta sea eliminada, todos sus recursos y datos
-                            se borrarán de forma permanente. Por favor, introduce tu contraseña 
-                            para confirmar que deseas eliminar tu cuenta definitivamente.
+                            Introduce tu contraseña para confirmar que quieres eliminar la
+                            cuenta definitivamente.
                         </DialogDescription>
 
                         <Form
@@ -65,10 +68,7 @@ export default function DeleteUser() {
                             {({ resetAndClearErrors, processing, errors }) => (
                                 <>
                                     <div className="grid gap-2">
-                                        <Label
-                                            htmlFor="password"
-                                            className="sr-only"
-                                        >
+                                        <Label htmlFor="password" className="sr-only">
                                             Contraseña
                                         </Label>
 
@@ -88,9 +88,8 @@ export default function DeleteUser() {
                                         <DialogClose asChild>
                                             <Button
                                                 variant="secondary"
-                                                onClick={() =>
-                                                    resetAndClearErrors()
-                                                }
+                                                className="rounded-xl"
+                                                onClick={() => resetAndClearErrors()}
                                             >
                                                 Cancelar
                                             </Button>
@@ -100,6 +99,7 @@ export default function DeleteUser() {
                                             variant="destructive"
                                             disabled={processing}
                                             asChild
+                                            className="rounded-xl"
                                         >
                                             <button
                                                 type="submit"
@@ -115,6 +115,6 @@ export default function DeleteUser() {
                     </DialogContent>
                 </Dialog>
             </div>
-        </div>
+        </Card>
     );
 }

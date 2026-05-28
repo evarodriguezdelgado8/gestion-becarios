@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Center;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CenterRequest extends FormRequest
@@ -17,31 +19,30 @@ class CenterRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        
-        $center = $this->route('center');
-        $centerId = $center instanceof \App\Models\Center ? $center->id : $center;
 
-       
-        $ignoreId = $centerId ? ',' . $centerId : '';
+        $center = $this->route('center');
+        $centerId = $center instanceof Center ? $center->id : $center;
+
+        $ignoreId = $centerId ? ','.$centerId : '';
 
         return [
             'nif' => [
                 'required',
                 'string',
                 'regex:/^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J]$/i',
-                'unique:centers,nif' . $ignoreId
-],
-            'name'          => 'required|string|max:255',
-            'address'       => 'required|string',
-            'phone'         => 'required|string',
-            'email'         => 'required|email|unique:centers,email' . $ignoreId,
-            'web'           => 'nullable|url',
-            'contact_name'  => 'required|string|max:255',
-            'contact_role'  => 'required|string|max:255',
+                'unique:centers,nif'.$ignoreId,
+            ],
+            'name' => 'required|string|max:255',
+            'address' => 'required|string',
+            'phone' => 'required|string',
+            'email' => 'required|email|unique:centers,email'.$ignoreId,
+            'web' => 'nullable|url',
+            'contact_name' => 'required|string|max:255',
+            'contact_role' => 'required|string|max:255',
             'contact_phone' => 'required|string',
             'contact_email' => 'required|email',
         ];

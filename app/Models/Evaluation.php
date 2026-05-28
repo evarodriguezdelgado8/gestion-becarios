@@ -8,19 +8,22 @@ class Evaluation extends Model
 {
     protected $fillable = ['intern_id', 'tutor_id', 'type', 'period_name', 'final_grade', 'comments'];
 
-    public function results() {
+    public function results()
+    {
         return $this->hasMany(EvaluationResult::class);
     }
 
-    public function intern() {
+    public function intern()
+    {
         return $this->belongsTo(User::class, 'intern_id');
     }
 
-    public function tutor() {
+    public function tutor()
+    {
         return $this->belongsTo(User::class, 'tutor_id');
     }
 
-    // Método para calcular la nota media ponderada
+    // Calcula la nota media ponderada usando los pesos configurados.
     public function calculateGrade()
     {
         $total = 0;
@@ -36,6 +39,7 @@ class Evaluation extends Model
         $grade = $totalWeight > 0 ? $total / ($totalWeight / 100) : 0;
 
         $this->update(['final_grade' => $grade]);
+
         return $grade;
     }
 }

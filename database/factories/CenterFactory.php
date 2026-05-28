@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Center;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Center>
+ * @extends Factory<Center>
  */
 class CenterFactory extends Factory
 {
@@ -17,15 +18,15 @@ class CenterFactory extends Factory
     public function definition(): array
     {
         return [
-            'nif' => $this->faker->bothify('#########?'), 
-            'name' => $this->faker->company() . ' School',
+            'nif' => $this->faker->bothify('#########?'),
+            'name' => $this->faker->company().' School',
             'address' => $this->faker->address(),
             'phone' => $this->faker->phoneNumber(),
             'email' => $this->faker->unique()->safeEmail(),
-            'web'           => $this->faker->url(),
-           
-            'contact_name'  => $this->faker->name(),
-            'contact_role'  => 'Coordinador de Prácticas',
+            'web' => $this->faker->url(),
+
+            'contact_name' => $this->faker->name(),
+            'contact_role' => 'Coordinador de Prácticas',
             'contact_phone' => $this->faker->phoneNumber(),
             'contact_email' => $this->faker->unique()->safeEmail(),
         ];

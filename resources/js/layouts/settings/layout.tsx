@@ -1,8 +1,8 @@
 import { Link } from '@inertiajs/react';
+import { KeyRound, Palette, ShieldCheck, User } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
-import Heading from '@/components/heading';
+
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
@@ -15,59 +15,62 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Perfil',
         href: toUrl(edit()),
-        icon: null,
+        icon: User,
     },
     {
         title: 'Contraseña',
         href: toUrl(editPassword()),
-        icon: null,
+        icon: KeyRound,
     },
     {
         title: 'Autenticación en dos pasos',
         href: toUrl(show()),
-        icon: null,
+        icon: ShieldCheck,
     },
     {
         title: 'Apariencia',
         href: toUrl(editAppearance()),
-        icon: null,
+        icon: Palette,
     },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
-    // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {
         return null;
     }
 
     return (
-        <div className="px-4 py-6">
-            <Heading
-                title="Configuración"
-                description="Gestiona tu perfil y los ajustes de tu cuenta"
-            />
+        <div className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">
+            <div>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                    Configuración
+                </h1>
+                <p className="mt-1 text-sm text-slate-500">
+                    Gestiona tu perfil, seguridad y preferencias visuales.
+                </p>
+            </div>
 
-            <div className="flex flex-col lg:flex-row lg:space-x-12 mt-6">
-                <aside className="w-full max-w-xl lg:w-48">
-                    <nav
-                        className="flex flex-col space-y-1 space-x-0"
-                        aria-label="Ajustes de cuenta"
-                    >
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+                <aside className="h-fit rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
+                    <nav className="flex flex-col gap-1" aria-label="Ajustes de cuenta">
                         {sidebarNavItems.map((item, index) => (
                             <Button
                                 key={`${item.href}-${index}`}
-                                size="sm"
                                 variant="ghost"
                                 asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted font-medium': isCurrentOrParentUrl(item.href),
-                                })}
+                                className={cn(
+                                    'h-11 w-full justify-start rounded-2xl px-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-950',
+                                    {
+                                        'bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700':
+                                            isCurrentOrParentUrl(item.href),
+                                    },
+                                )}
                             >
-                                <Link href={item.href}>
+                                <Link href={item.href} className="flex items-center gap-2">
                                     {item.icon && (
-                                        <item.icon className="h-4 w-4 mr-2" />
+                                        <item.icon className="h-4 w-4 shrink-0" />
                                     )}
                                     {item.title}
                                 </Link>
@@ -76,13 +79,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                     </nav>
                 </aside>
 
-                <Separator className="my-6 lg:hidden" />
-
-                <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">
-                        {children}
-                    </section>
-                </div>
+                <section className="min-w-0">{children}</section>
             </div>
         </div>
     );

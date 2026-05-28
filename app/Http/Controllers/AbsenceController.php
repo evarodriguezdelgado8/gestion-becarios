@@ -56,7 +56,7 @@ class AbsenceController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user || !$user->hasAnyRole(['admin', 'tutor'])) {
+        if (! $user || ! $user->hasAnyRole(['admin', 'tutor'])) {
             abort(403);
         }
 

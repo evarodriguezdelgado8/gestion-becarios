@@ -18,7 +18,6 @@ import {
     CartesianGrid,
     Cell,
     ResponsiveContainer,
-    Tooltip,
     XAxis,
     YAxis,
 } from 'recharts';
@@ -452,7 +451,6 @@ export default function Dashboard({
                                             axisLine={false}
                                             tick={{ fontSize: 12 }}
                                         />
-                                        <Tooltip cursor={false} />
                                         <Bar
                                             dataKey="total"
                                             radius={[8, 8, 0, 0]}

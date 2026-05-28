@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->decimal('weight', 5, 2);
-            $table->json('rubric')->nullable(); 
+            $table->json('rubric')->nullable();
             $table->timestamps();
         });
     }

@@ -438,7 +438,7 @@ export default function Index({ interns, filters, centers, flash }: Props) {
             ),
         },
         {
-            header: 'Centro y Tutor',
+            header: 'Centro y tutores',
             className: 'min-w-[220px]',
             render: (becario) => (
                 <div className="space-y-2">
@@ -457,13 +457,27 @@ export default function Index({ interns, filters, centers, flash }: Props) {
                             </span>
                         )}
                     </div>
-                    <div className="ml-6 flex items-center gap-1.5 text-[12px] font-black text-slate-400 uppercase">
-                        <User className="h-3.5 w-3.5 text-slate-400" />{' '}
-                        {becario.tutor?.name || 'Sin tutor asignado'}
+                    <div className="ml-6 flex items-start gap-1.5 text-[12px] text-slate-500">
+                        <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <div className="min-w-0">
+                            <span className="font-black text-slate-400 uppercase">
+                                Tutor empresa:
+                            </span>{' '}
+                            <span className="font-semibold text-slate-600">
+                                {becario.tutor?.name || 'Sin tutor asignado'}
+                            </span>
+                        </div>
                     </div>
-                    <div className="ml-6 text-[11px] font-semibold text-slate-400">
-                        Centro:{' '}
-                        {becario.academic_tutor || 'Sin tutor académico'}
+                    <div className="ml-6 flex items-start gap-1.5 text-[12px] text-slate-500">
+                        <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <div className="min-w-0">
+                            <span className="font-black text-slate-400 uppercase">
+                                Tutor centro:
+                            </span>{' '}
+                            <span className="font-semibold text-slate-600">
+                                {becario.academic_tutor || 'Sin tutor académico'}
+                            </span>
+                        </div>
                     </div>
                     <div className="ml-6 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
                         <GraduationCap className="h-4 w-4 text-slate-400" />{' '}

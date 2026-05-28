@@ -69,16 +69,15 @@ export default function RolesIndex({ roles, allPermissions }: Props) {
 
     return (
         <AppLayout>
-            <Head title="Matriz de Permisos" />
+            <Head title="Permisos" />
 
             <div className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">
                 <div className="space-y-6">
                     <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-slate-800">
-                                Matriz de Roles y Permisos
+                                Permisos
                             </h1>
-                            
                         </div>
                         <div className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400 shadow-sm">
                             Sincronización automática activada

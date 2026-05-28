@@ -12,24 +12,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('interns', function (Blueprint $table) {
-        $table->id();
-        
-        $table->foreignId('center_id')->constrained()->onDelete('cascade');
-        
-        $table->string('name');
-        $table->string('last_name');
-        $table->string('dni')->unique();
-        $table->string('email')->unique();
-        $table->string('phone');
-        $table->string('address');
+            $table->id();
 
-        $table->string('status')->default('active'); 
-        $table->date('start_date');
+            $table->foreignId('center_id')->constrained()->onDelete('cascade');
 
-        $table->timestamps();
-        $table->softDeletes();
-    });
-}
+            $table->string('name');
+            $table->string('last_name');
+            $table->string('dni')->unique();
+            $table->string('email')->unique();
+            $table->string('phone');
+            $table->string('address');
+
+            $table->string('status')->default('active');
+            $table->date('start_date');
+
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
 
     /**
      * Reverse the migrations.

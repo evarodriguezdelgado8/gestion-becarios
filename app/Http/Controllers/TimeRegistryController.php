@@ -401,7 +401,7 @@ class TimeRegistryController extends Controller
 
                     if (empty($start) || empty($end)) {
                         throw ValidationException::withMessages([
-                            'schedules' => 'Completa entrada y salida para cada dÃ­a que quieras modificar.',
+                            'schedules' => 'Completa entrada y salida para cada dia que quieras modificar.',
                         ]);
                     }
 

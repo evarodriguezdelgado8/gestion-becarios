@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CenterRequest;
 use App\Models\Center;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Redirect;
-use App\Http\Requests\CenterRequest;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 
 class CenterController extends Controller
 {
-
-
     /**
      * Display a listing of the resource.
      */
@@ -27,12 +24,12 @@ class CenterController extends Controller
 
                 ->when($request->input('search'), function ($query, $search) {
                     $query->where('name', 'ilike', "%{$search}%")
-                          ->orWhere('nif', 'ilike', "%{$search}%")
-                          ->orWhere('email', 'ilike', "%{$search}%")                          
-                          ->orWhere('phone', 'ilike', "%{$search}%")
-                          ->orWhere('address', 'ilike', "%{$search}%")
-                          ->orWhere('contact_name', 'ilike', "%{$search}%")
-                          ->orWhere('contact_email', 'ilike', "%{$search}%");;
+                        ->orWhere('nif', 'ilike', "%{$search}%")
+                        ->orWhere('email', 'ilike', "%{$search}%")
+                        ->orWhere('phone', 'ilike', "%{$search}%")
+                        ->orWhere('address', 'ilike', "%{$search}%")
+                        ->orWhere('contact_name', 'ilike', "%{$search}%")
+                        ->orWhere('contact_email', 'ilike', "%{$search}%");
                 })
                 ->latest()
                 ->paginate(10)
@@ -46,7 +43,7 @@ class CenterController extends Controller
      */
     public function create()
     {
-        
+
         return Inertia::render('centros/form');
     }
 
@@ -61,6 +58,7 @@ class CenterController extends Controller
 
         return Redirect::route('centros.index')->with('success', 'Centro creado.');
     }
+
     /**
      * Display the specified resource.
      */
@@ -80,8 +78,8 @@ class CenterController extends Controller
                 'activos' => $center->interns()->where('status', 'active')->count(),
                 'finalizados' => $center->interns()->where('status', 'finished')->count(),
                 'abandonados' => $center->interns()->where('status', 'abandoned')->count(),
-                
-            ]
+
+            ],
         ]);
     }
 
@@ -91,7 +89,7 @@ class CenterController extends Controller
     public function edit(Center $center)
     {
         return Inertia::render('centros/form', [
-            'center' => $center
+            'center' => $center,
         ]);
     }
 
@@ -113,8 +111,9 @@ class CenterController extends Controller
         if ($center->interns()->where('status', 'active')->exists()) {
             return redirect()->back()->with('error', 'No se puede eliminar: el centro tiene becarios activos.');
         }
-    
+
         $center->delete();
+
         return redirect()->route('centros.index')->with('success', 'Centro eliminado correctamente.');
     }
 }

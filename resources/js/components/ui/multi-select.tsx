@@ -23,9 +23,12 @@ interface MultiSelectProps {
   selected: string[]
   onChange: (value: string[]) => void
   placeholder?: string
+  className?: string
+  selectedClassName?: string
+  badgeClassName?: string
 }
 
-export function MultiSelect({ options, selected, onChange, placeholder }: MultiSelectProps) {
+export function MultiSelect({ options, selected, onChange, placeholder, className, selectedClassName, badgeClassName }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false)
 
   const handleUnselect = (item: string) => {
@@ -51,10 +54,11 @@ export function MultiSelect({ options, selected, onChange, placeholder }: MultiS
             "flex w-full items-center justify-between min-h-[38px] h-auto py-1.5 px-3",
             "bg-slate-50 border border-slate-200 rounded-lg", // Igual que el input
             "hover:bg-slate-100 transition-all cursor-pointer outline-none",
-            "focus-visible:ring-2 focus-visible:ring-blue-500"
+            "focus-visible:ring-2 focus-visible:ring-blue-500",
+            className
           )}
         >
-          <div className="flex flex-wrap gap-1 max-w-[90%]">
+          <div className={cn("flex flex-wrap gap-1 max-w-[90%]", selectedClassName)}>
             {selected.length > 0 ? (
               selected.map((val) => {
                 const label = options.find((o) => o.value === val)?.label;
@@ -63,7 +67,7 @@ export function MultiSelect({ options, selected, onChange, placeholder }: MultiS
                     key={val} 
                     variant="secondary" 
                     // AJUSTE: Badges más discretos para no romper la altura del input
-                    className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-none max-w-[150px] flex items-center gap-1 px-2 py-0"
+                    className={cn("bg-blue-100 text-blue-700 hover:bg-blue-200 border-none max-w-[150px] flex items-center gap-1 px-2 py-0", badgeClassName)}
                   >
                     <span className="truncate text-[11px] font-medium uppercase tracking-wider">
                       {label}

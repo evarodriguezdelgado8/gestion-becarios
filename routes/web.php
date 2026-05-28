@@ -9,6 +9,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TimeRegistryController;
+use App\Http\Controllers\TutorAssignmentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -143,6 +144,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin', [RoleController::class, 'index'])->name('admin.index');
         Route::post('/admin/roles/{role}', [RoleController::class, 'update'])->name('admin.roles.update');
+        Route::get('/admin/usuarios', [RoleController::class, 'users'])->name('admin.users.index');
+        Route::post('/admin/usuarios', [RoleController::class, 'storeUser'])->name('admin.users.store');
+        Route::patch('/admin/usuarios/{user}/rol', [RoleController::class, 'updateUserRole'])->name('admin.users.role.update');
+        Route::get('/admin/asignaciones-tutores', [TutorAssignmentController::class, 'index'])->name('admin.tutor-assignments.index');
+        Route::patch('/admin/becarios/{intern}/tutor', [TutorAssignmentController::class, 'update'])->name('admin.tutor-assignments.update');
     });
 });
 

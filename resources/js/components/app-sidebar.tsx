@@ -7,6 +7,7 @@ import {
     LayoutGrid,
     School,
     ShieldCheck,
+    UserCog,
     Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -100,9 +101,15 @@ export function AppSidebar() {
             role: 'admin',
         },
         {
-            title: 'Roles y Permisos',
+            title: 'Permisos',
             href: '/admin',
             icon: ShieldCheck,
+            role: 'admin',
+        },
+        {
+            title: 'Usuarios y Roles',
+            href: '/admin/usuarios',
+            icon: UserCog,
             role: 'admin',
         },
     ];

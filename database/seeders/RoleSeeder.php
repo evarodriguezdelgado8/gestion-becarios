@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleSeeder extends Seeder
 {
@@ -14,16 +14,16 @@ class RoleSeeder extends Seeder
             'manage centers',
             'view centers',
 
-            'manage interns',            
+            'manage interns',
             'view interns',
-            
+
             'create tasks',
             'assign tasks',
             'edit any task',
             'delete tasks',
             'attach specifications',
             'evaluate progress',
-            
+
             'view own tasks',
             'upload deliverables',
             'update task status',

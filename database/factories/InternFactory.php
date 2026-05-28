@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Intern;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Intern>
+ * @extends Factory<Intern>
  */
 class InternFactory extends Factory
 {
@@ -17,13 +18,13 @@ class InternFactory extends Factory
     public function definition(): array
     {
         $startDate = $this->faker->dateTimeBetween('-6 months', 'now');
-        
-        $endDate = (clone $startDate)->modify('+' . rand(3, 6) . ' months');
+
+        $endDate = (clone $startDate)->modify('+'.rand(3, 6).' months');
 
         return [
             'name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
-            'dni' => $this->faker->unique()->bothify('########?') , 
+            'dni' => $this->faker->unique()->bothify('########?'),
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->phoneNumber(),
             'address' => $this->faker->address(),

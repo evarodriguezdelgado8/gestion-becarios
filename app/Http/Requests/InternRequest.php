@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Intern;
 use App\Models\User;
-use Illuminate\Foundation\Http\FormRequest;
 use App\Rules\ValidDni;
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
 
 class InternRequest extends FormRequest
 {
@@ -19,45 +21,44 @@ class InternRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         $intern = $this->route('intern');
-        $internId = $intern instanceof \App\Models\Intern ? $intern->id : $intern;
-        $ignoreId = $internId ? ',' . $internId : '';
+        $internId = $intern instanceof Intern ? $intern->id : $intern;
+        $ignoreId = $internId ? ','.$internId : '';
 
         return [
-            'name'              => 'required|string|max:255',
-            'last_name'         => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'dni' => [
-                'required', 
-                'string', 
-                new ValidDni, 
-                'unique:interns,dni' . $ignoreId
+                'required',
+                'string',
+                new ValidDni,
+                'unique:interns,dni'.$ignoreId,
             ],
-            'email'             => 'required|email|unique:interns,email' . $ignoreId,
-            'phone'             => 'required|string',
-            'address'           => 'required|string',
+            'email' => 'required|email|unique:interns,email'.$ignoreId,
+            'phone' => 'required|string',
+            'address' => 'required|string',
 
-            'center_id'         => 'required|exists:centers,id',
-            'tutor_id'          => 'required|exists:users,id',
-            'academic_cycle'    => 'required|in:ASIR,DAM,DAW',
-            'academic_tutor'    => 'required|string|max:255',
+            'center_id' => 'required|exists:centers,id',
+            'tutor_id' => 'nullable|exists:users,id',
+            'academic_cycle' => 'required|in:ASIR,DAM,DAW',
+            'academic_tutor' => 'required|string|max:255',
 
-            'start_date'        => 'required|date',
-            'end_date'          => 'required|date|after:start_date',
-            'total_hours'       => 'required|integer|min:1',
-            'completed_hours'   => 'required|integer|min:0',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'total_hours' => 'required|integer|min:1',
+            'completed_hours' => 'required|integer|min:0',
 
-            'status'            => 'required|in:active,finished,abandoned',
+            'status' => 'required|in:active,finished,abandoned',
 
-            'document_dni'      => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'document_dni' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'document_convenio' => 'nullable|file|mimes:pdf|max:5120',
-            'document_seguro'   => 'nullable|file|mimes:pdf|max:5120',
+            'document_seguro' => 'nullable|file|mimes:pdf|max:5120',
         ];
     }
-
 
     public function messages(): array
     {
@@ -67,6 +68,7 @@ class InternRequest extends FormRequest
             'end_date.after' => 'La fecha de fin debe ser posterior a la de inicio.',
         ];
     }
+
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {

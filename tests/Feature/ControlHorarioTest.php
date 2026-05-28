@@ -93,6 +93,47 @@ test('manual registry accepts punctual status as a normal registry alias', funct
         ->toBe('normal');
 });
 
+test('intern can check in and check out with automatic worked hours calculation', function () {
+    Carbon::setTestNow('2026-05-04 08:00:00');
+
+    try {
+        $this->seed(RoleSeeder::class);
+
+        $center = Center::factory()->create();
+        $internUser = User::factory()->create();
+        $internUser->assignRole('intern');
+
+        Intern::factory()->create([
+            'user_id' => $internUser->id,
+            'center_id' => $center->id,
+            'total_hours' => 400,
+            'completed_hours' => 0,
+        ]);
+
+        $this->actingAs($internUser)
+            ->post(route('control-horario.check-in'))
+            ->assertSessionHasNoErrors();
+
+        $registry = TimeRegistry::query()->where('user_id', $internUser->id)->sole();
+
+        expect($registry->check_out)->toBeNull()
+            ->and($registry->type)->toBe('automatic');
+
+        Carbon::setTestNow('2026-05-04 14:30:00');
+
+        $this->actingAs($internUser)
+            ->patch(route('control-horario.check-out', $registry))
+            ->assertSessionHasNoErrors();
+
+        $registry->refresh();
+
+        expect((float) $registry->total_hours)->toBe(6.5)
+            ->and((int) $registry->check_out?->format('H'))->toBe(14);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
 test('approved absences count as reviewed today in the manager dashboard', function () {
     Carbon::setTestNow('2026-05-13 10:00:00');
 
